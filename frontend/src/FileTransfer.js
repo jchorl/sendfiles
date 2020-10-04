@@ -1,8 +1,8 @@
 export class Sender {
   chunkSize = 16384;
 
-  constructor(file) {
-    this.file = file;
+  constructor(contents) {
+    this.contents = contents;
     this.connection = new RTCPeerConnection();
     console.log("Created local peer connection object localConnection");
 
@@ -58,56 +58,34 @@ export class Sender {
   }
 
   sendData() {
-    const { file } = this;
-    console.log(
-      `File is ${[file.name, file.size, file.type, file.lastModified].join(
-        " "
-      )}`
-    );
+    const { contents } = this;
 
-    // Handle 0 size files.
-    if (file.size === 0) {
-      throw new Error(
-        `File ${file.name} is empty, please select a non-empty file. ALSO TODO closeChannelAndConn`
-      );
-    }
-
-    this.fileReader = new FileReader();
     let offset = 0;
-    this.fileReader.addEventListener("error", (error) =>
-      console.error("Error reading file:", error)
-    );
-    this.fileReader.addEventListener("abort", (event) =>
-      console.log("File reading aborted:", event)
-    );
-    this.fileReader.addEventListener("load", (e) => {
-      console.log("FileRead.onload ", e);
-      this.channel.send(e.target.result);
-      offset += e.target.result.byteLength;
+    const contentLen = contents.byteLength;
+    while (offset < contentLen) {
       console.log(`send progress: ${offset}`);
-      if (offset < file.size) {
-        this.readSlice(offset);
-      }
-    });
-
-    this.readSlice(0);
-  }
-
-  readSlice(offset) {
-    console.log("readSlice ", offset);
-    const slice = this.file.slice(offset, offset + this.chunkSize);
-    this.fileReader.readAsArrayBuffer(slice);
+      const sliceContents = contents.slice(offset, offset + this.chunkSize);
+      this.channel.send(sliceContents);
+      offset += sliceContents.byteLength;
+    }
   }
 }
 
 export class Receiver {
-  receiveBuffer = [];
   receivedSize = 0;
 
   fileSize;
 
   constructor(fileSize) {
     this.connection = new RTCPeerConnection();
+    this.receiveBuffer = new Uint8Array(fileSize);
+
+    // this is a funky interface hack that turns the registered-callback interface
+    // into an async/await promise interface :(
+    this.completionPromise = new Promise((resolve, reject) => {
+      this.resolveCompletionPromise = resolve;
+    });
+
     console.log("Created remote peer connection object remoteConnection");
 
     this.fileSize = fileSize;
@@ -145,13 +123,14 @@ export class Receiver {
     const receiveChannel = event.channel;
     receiveChannel.binaryType = "arraybuffer";
     receiveChannel.onmessage = (event) => this.onReceiveMessageCallback(event);
-    receiveChannel.onopen = () => this.onReceiveChannelStateChange();
-    receiveChannel.onclose = () => this.onReceiveChannelStateChange();
+    receiveChannel.onopen = () =>
+      this.onReceiveChannelStateChange(receiveChannel);
+    receiveChannel.onclose = () =>
+      this.onReceiveChannelStateChange(receiveChannel);
   }
 
   onReceiveMessageCallback(event) {
-    console.log(`Received Message ${event.data.byteLength}`);
-    this.receiveBuffer.push(event.data);
+    this.receiveBuffer.set(new Uint8Array(event.data), this.receivedSize);
     this.receivedSize += event.data.byteLength;
 
     console.log(`Received progress: ${this.receivedSize}`);
@@ -159,17 +138,13 @@ export class Receiver {
     // we are assuming that our signaling protocol told
     // about the expected file size (and name, hash, etc).
     if (this.receivedSize === this.fileSize) {
-      const received = new Blob(this.receiveBuffer);
-      this.receiveBuffer = [];
-
-      const downloadLink = URL.createObjectURL(received);
-      console.log(`Could now download at ${downloadLink}`);
+      this.resolveCompletionPromise(this.receiveBuffer);
       console.log("TODO close channels");
     }
   }
 
-  async onReceiveChannelStateChange() {
-    const readyState = this.channel.readyState;
+  async onReceiveChannelStateChange(channel) {
+    const readyState = channel.readyState;
     console.log(`Receive channel state is: ${readyState}`);
   }
 }
