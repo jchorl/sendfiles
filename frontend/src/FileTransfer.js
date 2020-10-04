@@ -95,7 +95,7 @@ export class Receiver {
     console.log('Created remote peer connection object remoteConnection');
 
     this.fileSize = fileSize;
-    this.connection.addEventListener('datachannel', this.receiveChannelCallback);
+    this.connection.addEventListener('datachannel', event => this.receiveChannelCallback(event));
   }
 
   // TODO get rid of this lurk
@@ -126,9 +126,9 @@ export class Receiver {
     console.log('Receive Channel Callback');
     const receiveChannel = event.channel;
     receiveChannel.binaryType = 'arraybuffer';
-    receiveChannel.onmessage = this.onReceiveMessageCallback;
-    receiveChannel.onopen = this.onReceiveChannelStateChange;
-    receiveChannel.onclose = this.onReceiveChannelStateChange;
+    receiveChannel.onmessage = event => this.onReceiveMessageCallback(event);
+    receiveChannel.onopen = () => this.onReceiveChannelStateChange();
+    receiveChannel.onclose = () => this.onReceiveChannelStateChange();
   }
 
   onReceiveMessageCallback(event) {
@@ -140,7 +140,7 @@ export class Receiver {
 
     // we are assuming that our signaling protocol told
     // about the expected file size (and name, hash, etc).
-    if (this.receivedSize === this.filesize) {
+    if (this.receivedSize === this.fileSize) {
       const received = new Blob(this.receiveBuffer);
       this.receiveBuffer = [];
 
@@ -150,8 +150,8 @@ export class Receiver {
     }
   }
 
-  async onReceiveChannelStateChange(receiveChannel) {
-    const readyState = receiveChannel.readyState;
+  async onReceiveChannelStateChange() {
+    const readyState = this.channel.readyState;
     console.log(`Receive channel state is: ${readyState}`);
   }
 }
