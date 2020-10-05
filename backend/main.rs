@@ -1,19 +1,25 @@
 use chrono::{DateTime, Utc};
-use lambda_http::{lambda, IntoResponse, Request};
+use lambda_http::{lambda, IntoResponse, Request, Response};
 use lambda_runtime::{error::HandlerError, Context};
-use serde_derive::Deserialize;
+use serde_derive::{Deserialize, Serialize};
+use uuid::Uuid;
 
 fn main() {
     lambda!(entrypoint)
 }
 
 fn entrypoint(request: Request, _ctx: Context) -> Result<impl IntoResponse, HandlerError> {
-    println!("in handler");
-    post_transfer_handler(request, _ctx)
+    match request.uri().path() {
+        "/transfers" => post_transfer_handler(request),
+        "/transfer" => get_transfer_handler(request),
+        _ => not_found(request),
+    }
 }
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize)]
 struct TransferDetails {
+    #[serde(rename = "id")]
+    id: Option<String>,
     #[serde(rename = "fileName")]
     file_name: String,
     #[serde(rename = "contentLengthBytes")]
@@ -24,15 +30,31 @@ struct TransferDetails {
     valid_until: DateTime<Utc>,
 }
 
-fn post_transfer_handler(
-    request: Request,
-    _ctx: Context,
-) -> Result<impl IntoResponse, HandlerError> {
+fn post_transfer_handler(request: Request) -> Result<Response<String>, HandlerError> {
     let body = request.into_body();
-    let details: TransferDetails = serde_json::from_slice(body.as_ref())?;
-    println!(
-        "file_name: {}, content_length_bytes: {}, valid_until: {}",
-        details.file_name, details.content_length_bytes, details.valid_until
-    );
-    Ok("hello world")
+    let mut details: TransferDetails = serde_json::from_slice(body.as_ref())?;
+    details.id = Some(Uuid::new_v4().to_hyphenated().to_string());
+    let resp = serde_json::to_string(&details)?;
+    Ok(Response::new(resp))
+}
+
+fn get_transfer_handler(_request: Request) -> Result<Response<String>, HandlerError> {
+    // TODO pull this from a db
+    let details = TransferDetails {
+        id: Some(Uuid::new_v4().to_hyphenated().to_string()),
+        file_name: "my_file.txt".to_string(),
+        content_length_bytes: 300,
+        private_key: "privkey".to_string(),
+        valid_until: Utc::now(),
+    };
+    let resp = serde_json::to_string(&details)?;
+    Ok(Response::new(resp))
+}
+
+fn not_found(_request: Request) -> Result<Response<String>, HandlerError> {
+    let response = Response::builder()
+        .status(404)
+        .body("".to_string())
+        .unwrap();
+    Ok(response)
 }
