@@ -1,3 +1,6 @@
+.aws_creds
 build
 backend/target
 output.json
+terraform/.terraform
+terraform/terraform.tfstate

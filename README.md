@@ -1,5 +1,16 @@
 # SecureSend
 
+## Deployment
+### Terraform
+```shell
+docker run -it --rm \
+    -v "$(pwd)/terraform":/work \
+    -w /work \
+    --env-file .aws_creds \
+    hashicorp/terraform:0.13.4 \
+    apply
+```
+
 ## Dev
 ### Running Everything
 ```shell
