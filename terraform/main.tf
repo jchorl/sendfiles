@@ -3,15 +3,15 @@ resource "aws_dynamodb_table" "securesend-table" {
   billing_mode   = "PROVISIONED"
   read_capacity  = 20
   write_capacity = 20
-  hash_key       = "Id"
+  hash_key       = "id"
 
   attribute {
-    name = "Id"
+    name = "id"
     type = "S"
   }
 
   ttl {
-    attribute_name = "ValidUntil"
+    attribute_name = "valid_until"
     enabled        = true
   }
 }
