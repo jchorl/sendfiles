@@ -1,6 +1,6 @@
 .aws_creds
 build
-backend/target
+backend/*/target
 output.json
 terraform/.terraform
 terraform/terraform.tfstate*
