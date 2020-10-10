@@ -86,7 +86,7 @@ resource "aws_lambda_function" "transfers_api" {
   runtime = "provided"
 }
 
-resource "aws_lambda_permission" "apigw" {
+resource "aws_lambda_permission" "transfers_apigw" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.transfers_api.arn
   principal     = "apigateway.amazonaws.com"

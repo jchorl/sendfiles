@@ -30,17 +30,14 @@ async fn main(request: Request, _: Context) -> Result<impl IntoResponse, Error> 
 }
 
 #[derive(Serialize, Deserialize, Item, Clone)]
+#[serde(rename_all = "camelCase")]
 struct TransferDetails {
-    #[serde(rename = "id")]
+    #[serde(skip_deserializing)]
     #[dynomite(partition_key)]
-    id: Option<String>,
-    #[serde(rename = "fileName")]
+    id: String,
     file_name: String,
-    #[serde(rename = "contentLengthBytes")]
     content_length_bytes: u32,
-    #[serde(rename = "privateKey")]
     private_key: String,
-    #[serde(rename = "validUntil")]
     valid_until: DateTime<Utc>,
 }
 
@@ -53,7 +50,7 @@ impl Api {
     async fn post_transfer_handler(&self, request: Request) -> Result<Response<String>, Error> {
         let body = request.into_body();
         let mut details: TransferDetails = serde_json::from_slice(body.as_ref())?;
-        details.id = Some(Uuid::new_v4().to_hyphenated().to_string());
+        details.id = Uuid::new_v4().to_hyphenated().to_string();
 
         let input = PutItemInput {
             table_name: self.secure_send_dynamo_table.clone(),
@@ -81,9 +78,7 @@ impl Api {
             .unwrap()
             .to_string();
 
-        let details_key = TransferDetailsKey {
-            id: Some(details_id),
-        };
+        let details_key = TransferDetailsKey { id: details_id };
 
         let result = self
             .db_client
