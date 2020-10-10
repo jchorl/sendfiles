@@ -12,4 +12,4 @@ docker run \
 
 unzip -o \
     backend/transfers/target/lambda/debug/securesend.zip \
-    -d build/lambda
+    -d build/lambda-local
