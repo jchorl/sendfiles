@@ -1,5 +1,5 @@
 locals {
-  routes = {
+  coord_routes = {
     connect = {
       route_key      = "$connect"
       operation_name = "ConnectRoute"
@@ -14,6 +14,7 @@ locals {
     }
   }
 }
+
 resource "aws_apigatewayv2_api" "coord" {
   name                         = "coord-ws-api"
   protocol_type                = "WEBSOCKET"
@@ -21,15 +22,15 @@ resource "aws_apigatewayv2_api" "coord" {
   disable_execute_api_endpoint = false # TODO change this to true when fronted by domain
 }
 
-resource "aws_apigatewayv2_deployment" "deployment" {
+resource "aws_apigatewayv2_deployment" "coord_deployment" {
   api_id = aws_apigatewayv2_api.coord.id
 
-  depends_on = [aws_apigatewayv2_route.route]
+  depends_on = [aws_apigatewayv2_route.coord_route]
 
   triggers = {
     redeployment = sha1(join(",", list(
-      jsonencode(aws_apigatewayv2_integration.integration),
-      jsonencode(aws_apigatewayv2_route.route),
+      jsonencode(aws_apigatewayv2_integration.coord_integration),
+      jsonencode(aws_apigatewayv2_route.coord_route),
     )))
   }
 
@@ -38,14 +39,14 @@ resource "aws_apigatewayv2_deployment" "deployment" {
   }
 }
 
-resource "aws_apigatewayv2_stage" "Stage" {
+resource "aws_apigatewayv2_stage" "coord_stage" {
   api_id        = aws_apigatewayv2_api.coord.id
   name          = "prod"
   description   = "Prod Stage"
-  deployment_id = aws_apigatewayv2_deployment.deployment.id
+  deployment_id = aws_apigatewayv2_deployment.coord_deployment.id
 }
 
-resource "aws_apigatewayv2_integration" "integration" {
+resource "aws_apigatewayv2_integration" "coord_integration" {
   api_id             = aws_apigatewayv2_api.coord.id
   integration_type   = "AWS_PROXY"
   description        = "integration"
@@ -53,10 +54,10 @@ resource "aws_apigatewayv2_integration" "integration" {
   integration_method = "POST"
 }
 
-resource "aws_apigatewayv2_route" "route" {
-  for_each       = local.routes
+resource "aws_apigatewayv2_route" "coord_route" {
+  for_each       = local.coord_routes
   api_id         = aws_apigatewayv2_api.coord.id
   route_key      = each.value.route_key
   operation_name = each.value.operation_name
-  target         = "integrations/${aws_apigatewayv2_integration.integration.id}"
+  target         = "integrations/${aws_apigatewayv2_integration.coord_integration.id}"
 }
