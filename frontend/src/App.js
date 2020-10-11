@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import config from "./Config.js";
 import { genKey, encryptMessage, decryptMessage } from "./Crypto.js";
 import { readFile } from "./File.js";
 import { Sender, Receiver } from "./FileTransfer.js";
@@ -68,21 +69,41 @@ function App() {
     const contents = await readFile(fileDetails);
     const encrypted = await encryptMessage(contents, key, password);
 
-    const sender = new Sender(encrypted);
-    const receiver = new Receiver(encrypted.byteLength);
-    sender.addIceCandidateListener(receiver);
-    receiver.addIceCandidateListener(sender);
-    const offer = await sender.createOffer();
-    const answer = await receiver.answer(offer);
-    await sender.registerAnswer(answer);
+    // first, post metadata
+    const validUntil = new Date(Date.now() + (config.FILE_VALID_HOURS*60*60*1000));
+    const exportedKey = await crypto.subtle.exportKey("raw", key);
+    const encodedKey = btoa(String.fromCharCode(...new Uint8Array(exportedKey)));
+    const metadata = {
+      fileName: fileDetails.name,
+      contentLengthBytes: encrypted.byteLength,
+      privateKey: encodedKey,
+      validUntil: validUntil,
+    }
 
-    const received = await receiver.completionPromise;
-    const decrypted = await decryptMessage(received, key, password);
+    await fetch(config.TRANSFER_API + "/transfer", {
+      method: "POST",
+      mode: "cors",  // TODO make this not CORS if possible
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(metadata),
+    })
 
-    const downloadBlob = new Blob([decrypted], { type: "text/plain" });
+    // const sender = new Sender(encrypted);
+    // const receiver = new Receiver(encrypted.byteLength);
+    // sender.addIceCandidateListener(receiver);
+    // receiver.addIceCandidateListener(sender);
+    // const offer = await sender.createOffer();
+    // const answer = await receiver.answer(offer);
+    // await sender.registerAnswer(answer);
 
-    // TODO change newfile
-    download("newfile.txt", downloadBlob);
+    // const received = await receiver.completionPromise;
+    // const decrypted = await decryptMessage(received, key, password);
+
+    // const downloadBlob = new Blob([decrypted], { type: "text/plain" });
+
+    // // TODO change newfile
+    // download("newfile.txt", downloadBlob);
   };
 
   return (

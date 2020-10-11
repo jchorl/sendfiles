@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 chrono = { version = "0.4", features = ["serde"] }
 dynomite = "0.10"
+http = "0.2"
 lambda_http = { git = "https://github.com/awslabs/aws-lambda-rust-runtime" }
 lambda_runtime = "0.2.1"
 rusoto_core = "0.45"

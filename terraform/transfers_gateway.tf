@@ -1,7 +1,7 @@
 locals {
   transfers_routes = {
     post_transfer = {
-      route_key      = "POST /transfers"
+      route_key      = "POST /transfer"
       operation_name = "PostTransfer"
     }
     get_transfers = {
@@ -18,7 +18,7 @@ resource "aws_apigatewayv2_api" "transfers" {
   cors_configuration {
     allow_methods = ["*"]
     allow_origins = ["*"]
-    allow_headers = ["Content-Type"]
+    allow_headers = ["*"]
   }
 }
 
@@ -27,14 +27,12 @@ resource "aws_apigatewayv2_deployment" "transfers_deployment" {
 
   depends_on = [
     aws_apigatewayv2_route.transfers_route,
-    aws_apigatewayv2_route.transfers_cors_route
   ]
 
   triggers = {
     redeployment = sha1(join(",", list(
       jsonencode(aws_apigatewayv2_integration.transfers_integration),
       jsonencode(aws_apigatewayv2_route.transfers_route),
-      jsonencode(aws_apigatewayv2_route.transfers_cors_route),
     )))
   }
 
@@ -64,11 +62,4 @@ resource "aws_apigatewayv2_route" "transfers_route" {
   route_key      = each.value.route_key
   operation_name = each.value.operation_name
   target         = "integrations/${aws_apigatewayv2_integration.transfers_integration.id}"
-}
-
-# this route is required for api gateway to intercept preflight OPTIONS reqs
-# and allow CORS
-resource "aws_apigatewayv2_route" "transfers_cors_route" {
-  api_id    = aws_apigatewayv2_api.transfers.id
-  route_key = "OPTIONS /{proxy+}"
 }

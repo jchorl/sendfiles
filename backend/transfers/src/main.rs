@@ -4,6 +4,7 @@ use dynomite::{
     retry::Policy,
     FromAttributes, Item, Retries,
 };
+use http::method::Method;
 use lambda_http::{
     lambda::{lambda, Context},
     IntoResponse, Request, RequestExt, Response,
@@ -22,9 +23,9 @@ async fn main(request: Request, _: Context) -> Result<impl IntoResponse, Error> 
         secure_send_dynamo_table: "SecuresendTransfersTest".to_string(),
     };
 
-    match request.uri().path() {
-        "/transfers" => api.post_transfer_handler(request).await,
-        "/transfer" => api.get_transfer_handler(request).await,
+    match request.method() {
+        &Method::POST => api.post_transfer_handler(request).await,
+        &Method::GET => api.get_transfer_handler(request).await,
         _ => api.not_found(request),
     }
 }

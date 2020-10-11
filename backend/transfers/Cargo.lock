@@ -1621,6 +1621,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "dynomite",
+ "http 0.2.1",
  "lambda_http",
  "lambda_runtime",
  "rusoto_core",
