@@ -18,7 +18,7 @@ type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 #[tokio::main]
 async fn main(request: Request, _: Context) -> Result<impl IntoResponse, Error> {
     let api = Api {
-        db_client: Box::new(DynamoDbClient::new(Region::UsWest2).with_retries(Policy::default())),
+        db_client: Box::new(DynamoDbClient::new(Region::default()).with_retries(Policy::default())),
         secure_send_dynamo_table: "SecuresendTransfersTest".to_string(),
     };
 

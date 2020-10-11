@@ -1,14 +1,19 @@
 mod errors;
+mod message;
 mod request;
 mod response;
 
+use bytes::Bytes;
 use chrono::{DateTime, Duration, Utc};
 use dynomite::{
-    dynamodb::{DynamoDb, DynamoDbClient, PutItemInput},
+    dynamodb::{DynamoDb, DynamoDbClient, GetItemInput, PutItemInput},
     retry::Policy,
-    Item, Retries,
+    FromAttributes, Item, Retries,
 };
 use lambda::{lambda, Context};
+use rusoto_apigatewaymanagementapi::{
+    ApiGatewayManagementApi, ApiGatewayManagementApiClient, PostToConnectionRequest,
+};
 use rusoto_core::Region;
 
 #[lambda]
@@ -18,7 +23,14 @@ async fn main(
     _: Context,
 ) -> Result<response::LambdaWebsocketResponse, errors::Error> {
     let api = Api {
-        db_client: Box::new(DynamoDbClient::new(Region::UsWest2).with_retries(Policy::default())),
+        db_client: Box::new(DynamoDbClient::new(Region::default()).with_retries(Policy::default())),
+        gw_client: Box::new(ApiGatewayManagementApiClient::new(Region::Custom {
+            name: Region::default().name().to_string(),
+            endpoint: format!(
+                "{}/{}",
+                request.request_context.domain_name, request.request_context.stage
+            ),
+        })),
         offers_table: "OffersTest".to_string(),
     };
 
@@ -39,6 +51,7 @@ struct Offer {
 
 struct Api {
     db_client: Box<dyn DynamoDb + Send + Sync>,
+    gw_client: Box<dyn ApiGatewayManagementApi + Send + Sync>,
     offers_table: String,
 }
 
@@ -103,7 +116,33 @@ impl Api {
         transfer_id: String,
         api_gateway_connection_id: String,
     ) -> Result<(), errors::Error> {
-        // TODO (this)
+        let offer_key = OfferKey {
+            transfer_id: transfer_id,
+        };
+        let result = self
+            .db_client
+            .get_item(GetItemInput {
+                table_name: self.offers_table.clone(),
+                key: offer_key.into(),
+                ..GetItemInput::default()
+            })
+            .await?;
+        let offer = Offer::from_attrs(result.item.unwrap())?;
+
+        let message = message::Message {
+            sender: api_gateway_connection_id,
+            recipient: offer.api_gateway_connection_id.clone(),
+            message_type: message::Type::NewRecipient,
+            body: None,
+        };
+        let message_encoded = serde_json::to_string(&message)?;
+        self.gw_client
+            .post_to_connection(PostToConnectionRequest {
+                connection_id: offer.api_gateway_connection_id,
+                data: Bytes::from(message_encoded),
+                ..PostToConnectionRequest::default()
+            })
+            .await?;
         Ok(())
     }
 }

@@ -15,7 +15,9 @@ pub struct LambdaWebsocketRequest {
 #[serde(rename_all = "camelCase")]
 pub struct LambdaWebsocketRequestContext {
     pub connection_id: String,
+    pub domain_name: String,
     pub route_key: String,
+    pub stage: String,
 }
 
 pub enum Role {

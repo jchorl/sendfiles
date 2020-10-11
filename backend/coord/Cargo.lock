@@ -238,10 +238,12 @@ checksum = "245097e9a4535ee1e3e3931fcfcd55a796a44c643e8596ff6566d68f09b87bbc"
 name = "coord"
 version = "0.1.0"
 dependencies = [
+ "bytes 0.5.6",
  "chrono",
  "dynomite",
  "lambda",
  "lambda_runtime",
+ "rusoto_apigatewaymanagementapi",
  "rusoto_core",
  "serde",
  "serde_derive",
@@ -1460,6 +1462,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3acd125665422973a33ac9d3dd2df85edad0f4ae9b00dafb1a05e43a9f5ef8e7"
 dependencies = [
  "winapi 0.3.9",
+]
+
+[[package]]
+name = "rusoto_apigatewaymanagementapi"
+version = "0.45.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7639210b836b0066779d7ebb4a6b9fed5329c03ddfa6604d822fbaf35105c7a1"
+dependencies = [
+ "async-trait",
+ "bytes 0.5.6",
+ "futures 0.3.6",
+ "rusoto_core",
+ "serde",
+ "serde_derive",
 ]
 
 [[package]]
