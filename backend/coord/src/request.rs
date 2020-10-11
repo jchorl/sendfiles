@@ -7,6 +7,7 @@ use std::collections::HashMap;
 #[serde(rename_all = "camelCase")]
 pub struct LambdaWebsocketRequest {
     pub request_context: LambdaWebsocketRequestContext,
+    #[serde(default)]
     pub query_string_parameters: HashMap<String, String>,
 }
 
@@ -24,9 +25,8 @@ pub enum Role {
 }
 
 pub struct ConnectRequest {
-    transfer_id: String,
-    connection_id: Option<String>,
-    role: Role,
+    pub transfer_id: String,
+    pub role: Role,
 }
 
 impl ConnectRequest {
@@ -34,11 +34,6 @@ impl ConnectRequest {
         let transfer_id = match req.query_string_parameters.get("transfer_id") {
             Some(s) => s.clone(),
             _ => return Err(Box::new(BadRequestError {})),
-        };
-
-        let connection_id = match req.query_string_parameters.get("connection_id") {
-            Some(s) => Some(s.clone()),
-            None => None,
         };
 
         let role = match req.query_string_parameters.get("role").unwrap().as_str() {
@@ -50,26 +45,9 @@ impl ConnectRequest {
 
         let req = ConnectRequest {
             transfer_id: transfer_id,
-            connection_id: connection_id,
             role: role,
         };
 
         Ok(req)
-    }
-
-    pub fn get_connection_id(&self) -> String {
-        match self.role {
-            Role::Offerer => format!("{}-offerer", self.transfer_id),
-            Role::Sender => format!(
-                "{}-{}-sender",
-                self.transfer_id,
-                self.connection_id.clone().unwrap()
-            ),
-            Role::Receiver => format!(
-                "{}-{}-receiver",
-                self.transfer_id,
-                self.connection_id.clone().unwrap()
-            ),
-        }
     }
 }

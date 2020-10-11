@@ -2,6 +2,7 @@ mod errors;
 mod request;
 mod response;
 
+use chrono::{DateTime, Duration, Utc};
 use dynomite::{
     dynamodb::{DynamoDb, DynamoDbClient, PutItemInput},
     retry::Policy,
@@ -18,23 +19,27 @@ async fn main(
 ) -> Result<response::LambdaWebsocketResponse, errors::Error> {
     let api = Api {
         db_client: Box::new(DynamoDbClient::new(Region::UsWest2).with_retries(Policy::default())),
-        connection_table: "ConnectionsTest".to_string(),
+        offers_table: "OffersTest".to_string(),
     };
 
-    // TODO match on route_key in context
-    api.connect(request).await
+    match request.request_context.route_key.as_str() {
+        "$connect" => api.connect(request).await,
+        "$disconnect" => api.disconnect(request).await,
+        _ => Err(Box::new(errors::BadRequestError {})),
+    }
 }
 
 #[derive(Item, Clone)]
-struct Connection {
+struct Offer {
     #[dynomite(partition_key)]
-    id: String,
+    transfer_id: String,
     api_gateway_connection_id: String,
+    valid_until: DateTime<Utc>,
 }
 
 struct Api {
     db_client: Box<dyn DynamoDb + Send + Sync>,
-    connection_table: String,
+    offers_table: String,
 }
 
 impl Api {
@@ -43,18 +48,62 @@ impl Api {
         request: request::LambdaWebsocketRequest,
     ) -> Result<response::LambdaWebsocketResponse, errors::Error> {
         let connect_req = request::ConnectRequest::parse_from(&request)?;
-        let connection = Connection {
-            id: connect_req.get_connection_id(),
-            api_gateway_connection_id: request.request_context.connection_id,
+
+        match connect_req.role {
+            request::Role::Offerer => {
+                self.add_offer(
+                    connect_req.transfer_id,
+                    request.request_context.connection_id,
+                )
+                .await?;
+            }
+            request::Role::Receiver => {
+                self.send_offerer_new_receiver(
+                    connect_req.transfer_id,
+                    request.request_context.connection_id,
+                )
+                .await?;
+            }
+            _ => {}
+        }
+        Ok(Default::default())
+    }
+
+    async fn disconnect(
+        &self,
+        _request: request::LambdaWebsocketRequest,
+    ) -> Result<response::LambdaWebsocketResponse, errors::Error> {
+        // for now, this is a no-op
+        Ok(Default::default())
+    }
+
+    async fn add_offer(
+        &self,
+        transfer_id: String,
+        api_gateway_connection_id: String,
+    ) -> Result<(), errors::Error> {
+        let offer = Offer {
+            transfer_id: transfer_id,
+            api_gateway_connection_id: api_gateway_connection_id,
+            valid_until: Utc::now() + Duration::minutes(15),
         };
 
         let input = PutItemInput {
-            table_name: self.connection_table.clone(),
-            item: connection.clone().into(),
+            table_name: self.offers_table.clone(),
+            item: offer.clone().into(),
             ..PutItemInput::default()
         };
 
         self.db_client.put_item(input).await?;
-        Ok(Default::default())
+        Ok(())
+    }
+
+    async fn send_offerer_new_receiver(
+        &self,
+        transfer_id: String,
+        api_gateway_connection_id: String,
+    ) -> Result<(), errors::Error> {
+        // TODO (this)
+        Ok(())
     }
 }

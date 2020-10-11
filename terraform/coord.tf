@@ -1,13 +1,18 @@
-resource "aws_dynamodb_table" "connections_table" {
-  name           = "ConnectionsTest"
+resource "aws_dynamodb_table" "offers_table" {
+  name           = "OffersTest"
   billing_mode   = "PROVISIONED"
   read_capacity  = 20
   write_capacity = 20
-  hash_key       = "id"
+  hash_key       = "transfer_id"
 
   attribute {
-    name = "id"
+    name = "transfer_id"
     type = "S"
+  }
+
+  ttl {
+    attribute_name = "valid_until"
+    enabled        = true
   }
 }
 
@@ -40,7 +45,7 @@ data "aws_iam_policy_document" "coord" {
     ]
 
     resources = [
-      aws_dynamodb_table.connections_table.arn
+      aws_dynamodb_table.offers_table.arn
     ]
   }
 

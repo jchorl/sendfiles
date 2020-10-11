@@ -108,3 +108,141 @@ docker run -it --rm \
 }
 ' output.json
 ```
+
+
+
+
+Sample events:
+
+connect:
+{
+    "headers": {
+        "Host": "5xw0qooyve.execute-api.us-west-2.amazonaws.com",
+        "Sec-WebSocket-Extensions": "permessage-deflate; client_max_window_bits",
+        "Sec-WebSocket-Key": "DZevCyvZTX/vZtht2k0STA==",
+        "Sec-WebSocket-Version": "13",
+        "X-Amzn-Trace-Id": "Root=1-5f8269c5-127f0157650f17587349b591",
+        "X-Forwarded-For": "73.92.233.22",
+        "X-Forwarded-Port": "443",
+        "X-Forwarded-Proto": "https"
+    },
+    "isBase64Encoded": false,
+    "multiValueHeaders": {
+        "Host": [
+            "5xw0qooyve.execute-api.us-west-2.amazonaws.com"
+        ],
+        "Sec-WebSocket-Extensions": [
+            "permessage-deflate; client_max_window_bits"
+        ],
+        "Sec-WebSocket-Key": [
+            "DZevCyvZTX/vZtht2k0STA=="
+        ],
+        "Sec-WebSocket-Version": [
+            "13"
+        ],
+        "X-Amzn-Trace-Id": [
+            "Root=1-5f8269c5-127f0157650f17587349b591"
+        ],
+        "X-Forwarded-For": [
+            "73.92.233.22"
+        ],
+        "X-Forwarded-Port": [
+            "443"
+        ],
+        "X-Forwarded-Proto": [
+            "https"
+        ]
+    },
+    "multiValueQueryStringParameters": {
+        "myq": [
+            "myval"
+        ]
+    },
+    "queryStringParameters": {
+        "myq": "myval"
+    },
+    "requestContext": {
+        "apiId": "5xw0qooyve",
+        "connectedAt": 1602382277715,
+        "connectionId": "UOV26c18PHcCHPA=",
+        "domainName": "5xw0qooyve.execute-api.us-west-2.amazonaws.com",
+        "eventType": "CONNECT",
+        "extendedRequestId": "UOV26HI4vHcFptQ=",
+        "identity": {
+            "accessKey": null,
+            "accountId": null,
+            "caller": null,
+            "cognitoAuthenticationProvider": null,
+            "cognitoAuthenticationType": null,
+            "cognitoIdentityId": null,
+            "cognitoIdentityPoolId": null,
+            "principalOrgId": null,
+            "sourceIp": "73.92.233.22",
+            "user": null,
+            "userAgent": null,
+            "userArn": null
+        },
+        "messageDirection": "IN",
+        "messageId": null,
+        "requestId": "UOV26HI4vHcFptQ=",
+        "requestTime": "11/Oct/2020:02:11:17 +0000",
+        "requestTimeEpoch": 1602382277715,
+        "routeKey": "$connect",
+        "stage": "prod"
+    }
+}
+
+
+disconnect:
+{
+    "headers": {
+        "Host": "5xw0qooyve.execute-api.us-west-2.amazonaws.com",
+        "X-Forwarded-For": "",
+        "x-api-key": "",
+        "x-restapi": ""
+    },
+    "isBase64Encoded": false,
+    "multiValueHeaders": {
+        "Host": [
+            "5xw0qooyve.execute-api.us-west-2.amazonaws.com"
+        ],
+        "X-Forwarded-For": [
+            ""
+        ],
+        "x-api-key": [
+            ""
+        ],
+        "x-restapi": [
+            ""
+        ]
+    },
+    "requestContext": {
+        "apiId": "5xw0qooyve",
+        "connectedAt": 1602440434119,
+        "connectionId": "UQj12cHzvHcCESg=",
+        "domainName": "5xw0qooyve.execute-api.us-west-2.amazonaws.com",
+        "eventType": "DISCONNECT",
+        "extendedRequestId": "UQj2IHCsvHcFUmg=",
+        "identity": {
+            "accessKey": null,
+            "accountId": null,
+            "caller": null,
+            "cognitoAuthenticationProvider": null,
+            "cognitoAuthenticationType": null,
+            "cognitoIdentityId": null,
+            "cognitoIdentityPoolId": null,
+            "principalOrgId": null,
+            "sourceIp": "73.92.233.22",
+            "user": null,
+            "userAgent": null,
+            "userArn": null
+        },
+        "messageDirection": "IN",
+        "messageId": null,
+        "requestId": "UQj2IHCsvHcFUmg=",
+        "requestTime": "11/Oct/2020:18:20:35 +0000",
+        "requestTimeEpoch": 1602440435968,
+        "routeKey": "$disconnect",
+        "stage": "prod"
+    }
+}
