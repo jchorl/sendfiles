@@ -40,7 +40,7 @@ data "aws_iam_policy_document" "coord" {
     ]
 
     resources = [
-      aws_dynamodb_table.securesend_table.arn
+      aws_dynamodb_table.connections_table.arn
     ]
   }
 
