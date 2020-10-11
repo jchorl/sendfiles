@@ -246,3 +246,38 @@ disconnect:
         "stage": "prod"
     }
 }
+
+standard message:
+{
+    "body": "{\"action\":\"SEND_MESSAGE\",\"data\":\"hi\"}",
+    "isBase64Encoded": false,
+    "requestContext": {
+        "apiId": "5xw0qooyve",
+        "connectedAt": 1602447421296,
+        "connectionId": "UQ05lfjyPHcCGVQ=",
+        "domainName": "5xw0qooyve.execute-api.us-west-2.amazonaws.com",
+        "eventType": "MESSAGE",
+        "extendedRequestId": "UQ08HEhCvHcFrPA=",
+        "identity": {
+            "accessKey": null,
+            "accountId": null,
+            "caller": null,
+            "cognitoAuthenticationProvider": null,
+            "cognitoAuthenticationType": null,
+            "cognitoIdentityId": null,
+            "cognitoIdentityPoolId": null,
+            "principalOrgId": null,
+            "sourceIp": "73.92.233.22",
+            "user": null,
+            "userAgent": null,
+            "userArn": null
+        },
+        "messageDirection": "IN",
+        "messageId": "UQ08Hf6SPHcCGVQ=",
+        "requestId": "UQ08HEhCvHcFrPA=",
+        "requestTime": "11/Oct/2020:20:17:17 +0000",
+        "requestTimeEpoch": 1602447437431,
+        "routeKey": "SEND_MESSAGE",
+        "stage": "prod"
+    }
+}

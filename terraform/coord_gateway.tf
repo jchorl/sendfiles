@@ -9,7 +9,7 @@ locals {
       operation_name = "DisconnectRoute"
     }
     sendmessage = {
-      route_key      = "sendmessage"
+      route_key      = "SEND_MESSAGE"
       operation_name = "SendRoute"
     }
   }
@@ -17,6 +17,7 @@ locals {
 resource "aws_apigatewayv2_api" "coord" {
   name                         = "coord-ws-api"
   protocol_type                = "WEBSOCKET"
+  route_selection_expression   = "$request.body.action"
   disable_execute_api_endpoint = false # TODO change this to true when fronted by domain
 }
 
@@ -24,6 +25,17 @@ resource "aws_apigatewayv2_deployment" "deployment" {
   api_id = aws_apigatewayv2_api.coord.id
 
   depends_on = [aws_apigatewayv2_route.route]
+
+  triggers = {
+    redeployment = sha1(join(",", list(
+      jsonencode(aws_apigatewayv2_integration.integration),
+      jsonencode(aws_apigatewayv2_route.route),
+    )))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_apigatewayv2_stage" "Stage" {

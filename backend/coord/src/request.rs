@@ -9,6 +9,20 @@ pub struct LambdaWebsocketRequest {
     pub request_context: LambdaWebsocketRequestContext,
     #[serde(default)]
     pub query_string_parameters: HashMap<String, String>,
+    #[serde(default)]
+    body: String,
+    #[serde(default)]
+    is_base_64_encoded: bool,
+}
+
+impl LambdaWebsocketRequest {
+    pub fn get_body(&self) -> String {
+        if !self.is_base_64_encoded {
+            return self.body.clone();
+        }
+
+        String::from_utf8(base64::decode(self.body.clone()).unwrap()).unwrap()
+    }
 }
 
 #[derive(Deserialize)]

@@ -1,16 +1,18 @@
+use serde::Deserialize;
 use serde::Serialize;
 
-#[derive(Serialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum Type {
-    NewRecipient,
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MessageIn {
+    pub action: String, // this should be SEND_MESSAGE
+    pub recipient: String,
+    pub body: String,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Message {
+pub struct MessageOut {
     pub sender: String,
     pub recipient: String,
-    pub message_type: Type,
-    pub body: Option<String>,
+    pub body: String,
 }

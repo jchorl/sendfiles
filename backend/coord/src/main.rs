@@ -15,6 +15,7 @@ use rusoto_apigatewaymanagementapi::{
     ApiGatewayManagementApi, ApiGatewayManagementApiClient, PostToConnectionRequest,
 };
 use rusoto_core::Region;
+use serde_json::json;
 
 #[lambda]
 #[tokio::main]
@@ -37,6 +38,7 @@ async fn main(
     match request.request_context.route_key.as_str() {
         "$connect" => api.connect(request).await,
         "$disconnect" => api.disconnect(request).await,
+        "SEND_MESSAGE" => api.send_message(request).await,
         _ => Err(Box::new(errors::BadRequestError {})),
     }
 }
@@ -90,6 +92,30 @@ impl Api {
         Ok(Default::default())
     }
 
+    async fn send_message(
+        &self,
+        request: request::LambdaWebsocketRequest,
+    ) -> Result<response::LambdaWebsocketResponse, errors::Error> {
+        let body = request.get_body();
+        let message_in: message::MessageIn = serde_json::from_str(body.as_ref())?;
+        let message_out = message::MessageOut {
+            sender: request.request_context.connection_id,
+            recipient: message_in.recipient,
+            body: message_in.body,
+        };
+
+        let message_encoded = serde_json::to_string(&message_out)?;
+        self.gw_client
+            .post_to_connection(PostToConnectionRequest {
+                connection_id: message_out.recipient,
+                data: Bytes::from(message_encoded),
+                ..PostToConnectionRequest::default()
+            })
+            .await?;
+
+        Ok(Default::default())
+    }
+
     async fn add_offer(
         &self,
         transfer_id: String,
@@ -129,11 +155,10 @@ impl Api {
             .await?;
         let offer = Offer::from_attrs(result.item.unwrap())?;
 
-        let message = message::Message {
+        let message = message::MessageOut {
             sender: api_gateway_connection_id,
             recipient: offer.api_gateway_connection_id.clone(),
-            message_type: message::Type::NewRecipient,
-            body: None,
+            body: json!({"type": "NEW_RECIPIENT"}).to_string(),
         };
         let message_encoded = serde_json::to_string(&message)?;
         self.gw_client
