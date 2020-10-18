@@ -20,32 +20,9 @@ function download(filename, blob) {
   document.body.removeChild(element);
 }
 
-function testws() {
-  let socket = new WebSocket("wss://5xw0qooyve.execute-api.us-west-2.amazonaws.com/prod");
-
-  socket.onopen = function(e) {
-    console.log("[open] Connection established");
-    console.log("Sending to server");
-    // socket.send("My name is John");
-  };
-
-  socket.onmessage = function(event) {
-    console.log(`[message] Data received from server: ${event.data}`);
-  };
-
-  socket.onclose = function(event) {
-    if (event.wasClean) {
-      console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
-    } else {
-      // e.g. server process killed or network down
-      // event.code is usually 1006 in this case
-      console.log('[close] Connection died');
-    }
-  };
-
-  socket.onerror = function(error) {
-    console.log(`[error] ${error.message}`);
-  };
+function getReceiverLink(id) {
+  const currentURL = new URL(window.location.href);
+  return `${currentURL.origin}/receive/${id}`
 }
 
 function App() {
@@ -62,7 +39,7 @@ function App() {
     setFileDetails(file);
   };
 
-  const submit = async (e) => {
+  const sender = async (e) => {
     e.preventDefault();
 
     const key = await genKey();
@@ -80,14 +57,26 @@ function App() {
       validUntil: validUntil,
     }
 
-    await fetch(config.TRANSFER_API + "/transfer", {
+    const transferDetails = await fetch(config.TRANSFER_API + "/transfer", {
       method: "POST",
       mode: "cors",  // TODO make this not CORS if possible
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(metadata),
-    })
+    }).then(resp => resp.json());
+
+    const receiverLink = getReceiverLink(transferDetails.id);
+    console.log(receiverLink);
+
+    const socketUrl = new URL(config.COORD_API);
+    socketUrl.searchParams.set("role", "offerer");
+    socketUrl.searchParams.set("transfer_id", transferDetails.id);
+    const socket = new WebSocket(socketUrl);
+    socket.onmessage = function(event) {
+      // TODO open a sender socket and do webrtc things
+      console.log("received event", event)
+    };
 
     // const sender = new Sender(encrypted);
     // const receiver = new Receiver(encrypted.byteLength);
@@ -105,6 +94,11 @@ function App() {
     // // TODO change newfile
     // download("newfile.txt", downloadBlob);
   };
+
+  const receiver = async (e) => {
+    e.preventDefault();
+    console.log("receiver button");
+  }
 
   return (
     <div>
@@ -128,13 +122,13 @@ function App() {
           <input id="file_input" type="file" onChange={onFileSelected} />
         </div>
         <div>
-          <button id="submit" type="submit" onClick={submit}>
+          <button id="submit" type="submit" onClick={sender}>
             Submit
           </button>
         </div>
       </form>
-      <button id="testingbutton" type="submit" onClick={testws}>
-        Test Websocket
+      <button id="receiver" type="submit" onClick={receiver}>
+        Simulate receiver
       </button>
       {fileDetails && <div>Filename: {fileDetails.name}</div>}
     </div>
