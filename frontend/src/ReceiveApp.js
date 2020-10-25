@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import config from "./Config.js";
 import { NEW_ANSWER, NEW_OFFER, NEW_ICE_CANDIDATE } from "./Constants.js";
 import { Receiver } from "./FileTransfer.js";
@@ -19,6 +19,8 @@ function download(filename, blob) {
 }
 
 function ReceiveApp() {
+  const [password, setPassword] = useState("");
+
   const receive = async (e) => {
     e.preventDefault();
 
@@ -45,7 +47,7 @@ function ReceiveApp() {
     socketUrl.searchParams.set("transfer_id", transferDetails.id);
     const socket = new WebSocket(socketUrl);
 
-    let receiver = new Receiver(socket, transferDetails.contentLengthBytes);
+    const receiver = new Receiver(socket, transferDetails.contentLengthBytes);
     socket.onmessage = async function (event) {
       const { sender: senderAddress, body: rawBody } = JSON.parse(event.data);
       const body = JSON.parse(rawBody);
@@ -66,14 +68,36 @@ function ReceiveApp() {
         }
       }
     };
+
+    const received = await receiver.completionPromise;
+    // TODO need to get privateKey base64 decoded into a uint8 array
+    const privateKey = await crypto.subtle.importKey("raw", transferDetails.privateKey);
+    const decrypted = await decryptMessage(received, privateKey, password);
+    const downloadBlob = new Blob([decrypted], { type: "text/plain" });
+    download(transferDetails.fileName, downloadBlob);
   };
 
   return (
     <div>
       Receive App
-      <button id="submit" type="submit" onClick={receive}>
-        Receive
-      </button>
+      <form>
+        <div>
+          <label htmlFor="password" className="file-select-label">
+            Enter password
+          </label>
+          <input
+            id="password"
+            type="password"
+            onChange={(e) => setPassword(e.target.value)}
+            value={password}
+          />
+        </div>
+        <div>
+          <button id="submit" type="submit" onClick={receive}>
+            Receive
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

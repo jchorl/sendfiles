@@ -119,14 +119,6 @@ function SendApp() {
         }
       }
     };
-
-    // const received = await receiver.completionPromise;
-    // const decrypted = await decryptMessage(received, key, password);
-
-    // const downloadBlob = new Blob([decrypted], { type: "text/plain" });
-
-    // // TODO change newfile
-    // download("newfile.txt", downloadBlob);
   };
 
   return (
