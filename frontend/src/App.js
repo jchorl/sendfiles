@@ -9,7 +9,7 @@ function App() {
   return (
     <div>
       <header>Secure Send</header>
-      { url.pathname.startsWith("/receive") ? <ReceiveApp /> : <SendApp /> }
+      {url.pathname.startsWith("/receive") ? <ReceiveApp /> : <SendApp />}
     </div>
   );
 }

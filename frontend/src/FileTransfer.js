@@ -1,19 +1,21 @@
 import config from "./Config.js";
 import { NEW_ICE_CANDIDATE } from "./Constants.js";
 
-
 class Client {
   constructor(socket) {
     this.socket = socket;
 
-    const configuration = {iceServers: [{urls: config.STUN_SERVER}]};
+    const configuration = { iceServers: [{ urls: config.STUN_SERVER }] };
     this.connection = new RTCPeerConnection(configuration);
   }
 
   registerIceCandidateListener() {
     this.connection.addEventListener("icecandidate", (event) => {
       if (event.candidate) {
-        this.sendMessage({ type: NEW_ICE_CANDIDATE, candidate: event.candidate });
+        this.sendMessage({
+          type: NEW_ICE_CANDIDATE,
+          candidate: event.candidate,
+        });
       }
     });
   }
@@ -90,7 +92,10 @@ export class Sender extends Client {
     const contentLen = this.contents.byteLength;
     while (offset < contentLen) {
       console.log(`send progress: ${offset}`);
-      const sliceContents = this.contents.slice(offset, offset + this.chunkSize);
+      const sliceContents = this.contents.slice(
+        offset,
+        offset + this.chunkSize
+      );
       this.channel.send(sliceContents);
       offset += sliceContents.byteLength;
     }
@@ -120,7 +125,9 @@ export class Receiver extends Client {
   }
 
   addIceCandidate(candidate) {
-    this.connection.addIceCandidate(candidate).catch(e => console.error("adding ice candidate", e));
+    this.connection
+      .addIceCandidate(candidate)
+      .catch((e) => console.error("adding ice candidate", e));
   }
 
   async answer(desc) {

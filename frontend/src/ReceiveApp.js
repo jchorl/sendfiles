@@ -19,23 +19,26 @@ function download(filename, blob) {
 }
 
 function ReceiveApp() {
-  const receive = async e => {
+  const receive = async (e) => {
     e.preventDefault();
 
     const currentURL = new URL(window.location.href);
     // turns /receive/aaa into aaa
-    const transferId = currentURL.pathname.match(/receive\/([\w-]+)\/?/)[1]
+    const transferId = currentURL.pathname.match(/receive\/([\w-]+)\/?/)[1];
 
     const params = new URLSearchParams();
-    params.set("id", transferId)
+    params.set("id", transferId);
 
-    const transferDetails = await fetch(config.TRANSFER_API + "/transfer?" + params.toString(), {
-      method: "GET",
-      mode: "cors",  // TODO make this not CORS if possible
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }).then(resp => resp.json());
+    const transferDetails = await fetch(
+      config.TRANSFER_API + "/transfer?" + params.toString(),
+      {
+        method: "GET",
+        mode: "cors", // TODO make this not CORS if possible
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    ).then((resp) => resp.json());
 
     const socketUrl = new URL(config.COORD_API);
     socketUrl.searchParams.set("role", "receiver");
@@ -43,7 +46,7 @@ function ReceiveApp() {
     const socket = new WebSocket(socketUrl);
 
     let receiver = new Receiver(socket, transferDetails.contentLengthBytes);
-    socket.onmessage = async function(event) {
+    socket.onmessage = async function (event) {
       const { sender: senderAddress, body: rawBody } = JSON.parse(event.data);
       const body = JSON.parse(rawBody);
 
@@ -63,7 +66,7 @@ function ReceiveApp() {
         }
       }
     };
-  }
+  };
 
   return (
     <div>
@@ -72,7 +75,7 @@ function ReceiveApp() {
         Receive
       </button>
     </div>
-  )
+  );
 }
 
 export default ReceiveApp;

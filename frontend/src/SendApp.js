@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import config from "./Config.js";
-import { NEW_ANSWER, NEW_OFFER, NEW_RECIPIENT, NEW_ICE_CANDIDATE } from "./Constants.js";
+import {
+  NEW_ANSWER,
+  NEW_OFFER,
+  NEW_RECIPIENT,
+  NEW_ICE_CANDIDATE,
+} from "./Constants.js";
 import { genKey, encryptMessage, decryptMessage } from "./Crypto.js";
 import { readFile } from "./File.js";
 import { Sender, Receiver } from "./FileTransfer.js";
@@ -8,7 +13,7 @@ import "./App.css";
 
 function getReceiverLink(id) {
   const currentURL = new URL(window.location.href);
-  return `${currentURL.origin}/receive/${id}`
+  return `${currentURL.origin}/receive/${id}`;
 }
 
 function SendApp() {
@@ -34,27 +39,31 @@ function SendApp() {
     const encrypted = await encryptMessage(contents, key, password);
 
     // first, post metadata
-    const validUntil = new Date(Date.now() + (config.FILE_VALID_HOURS*60*60*1000));
+    const validUntil = new Date(
+      Date.now() + config.FILE_VALID_HOURS * 60 * 60 * 1000
+    );
     const exportedKey = await crypto.subtle.exportKey("raw", key);
-    const encodedKey = btoa(String.fromCharCode(...new Uint8Array(exportedKey)));
+    const encodedKey = btoa(
+      String.fromCharCode(...new Uint8Array(exportedKey))
+    );
     const metadata = {
       fileName: fileDetails.name,
       contentLengthBytes: encrypted.byteLength,
       privateKey: encodedKey,
       validUntil: validUntil,
-    }
+    };
 
     const transferDetails = await fetch(config.TRANSFER_API + "/transfer", {
       method: "POST",
-      mode: "cors",  // TODO make this not CORS if possible
+      mode: "cors", // TODO make this not CORS if possible
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(metadata),
-    }).then(resp => resp.json());
+    }).then((resp) => resp.json());
 
     const receiverLink = getReceiverLink(transferDetails.id);
-    setReceiveLink(receiverLink)
+    setReceiveLink(receiverLink);
 
     const socketUrl = new URL(config.COORD_API);
     socketUrl.searchParams.set("role", "offerer");
@@ -80,9 +89,9 @@ function SendApp() {
           break;
         }
       }
-    }
+    };
 
-    socket.onmessage = async function(event) {
+    socket.onmessage = async function (event) {
       const { sender: senderAddress, body: rawBody } = JSON.parse(event.data);
       const body = JSON.parse(rawBody);
 
@@ -97,7 +106,7 @@ function SendApp() {
           // need to wait for the socket to open
           await new Promise((resolve, reject) => {
             senderSocket.onopen = resolve;
-          })
+          });
 
           const sender = new Sender(senderSocket, encrypted);
           sender.setRecipientAddress(senderAddress);
@@ -146,7 +155,7 @@ function SendApp() {
           </button>
         </div>
       </form>
-      { receiveLink && <div>Receiver link: { receiveLink }</div> }
+      {receiveLink && <div>Receiver link: {receiveLink}</div>}
     </div>
   );
 }
