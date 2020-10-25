@@ -50,6 +50,16 @@ data "aws_iam_policy_document" "coord" {
   }
 
   statement {
+    actions = [
+      "execute-api:ManageConnections",
+    ]
+
+    resources = [
+      "${aws_apigatewayv2_api.coord.execution_arn}/*/POST/@connections/{connectionId}"
+    ]
+  }
+
+  statement {
     sid    = "Logging"
     effect = "Allow"
 

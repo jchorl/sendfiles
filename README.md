@@ -4,8 +4,9 @@
 ### Terraform
 ```shell
 docker run -it --rm \
-    -v "$(pwd)/terraform":/work \
-    -w /work \
+    -v "$(pwd)/terraform":/work/terraform \
+    -v "$(pwd)/build":/work/build \
+    -w /work/terraform \
     --env-file .aws_creds \
     hashicorp/terraform:0.13.4 \
     apply
@@ -27,6 +28,7 @@ docker run -it --rm \
 docker run -it --rm \
     -v "$(pwd)/frontend":/securesend:ro \
     -w /securesend \
+    --tmpfs /securesend/node_modules/webpack-dev-server/ssl \
     -p 3000:3000 \
     node:14.12 \
     yarn start

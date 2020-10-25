@@ -1,14 +1,48 @@
-export class Sender {
+import config from "./Config.js";
+import { NEW_ICE_CANDIDATE } from "./Constants.js";
+
+
+class Client {
+  constructor(socket) {
+    this.socket = socket;
+
+    const configuration = {iceServers: [{urls: config.STUN_SERVER}]};
+    this.connection = new RTCPeerConnection(configuration);
+  }
+
+  registerIceCandidateListener() {
+    this.connection.addEventListener("icecandidate", (event) => {
+      if (event.candidate) {
+        this.sendMessage({ type: NEW_ICE_CANDIDATE, candidate: event.candidate });
+      }
+    });
+  }
+
+  setRecipientAddress(addr) {
+    this.recipientAddr = addr;
+  }
+
+  sendMessage(message) {
+    const body = {
+      action: "SEND_MESSAGE",
+      recipient: this.recipientAddr,
+      body: JSON.stringify(message),
+    };
+    const encoded = JSON.stringify(body);
+    this.socket.send(encoded);
+  }
+}
+
+export class Sender extends Client {
   chunkSize = 16384;
 
-  constructor(contents) {
+  constructor(socket, contents) {
+    super(socket);
+
     this.contents = contents;
-    this.connection = new RTCPeerConnection();
-    console.log("Created local peer connection object localConnection");
 
     this.channel = this.connection.createDataChannel("sendDataChannel");
     this.channel.binaryType = "arraybuffer";
-    console.log("Created send data channel");
 
     // "useless" in-line lambdas because otherwise `this` gets overridden in the callback
     this.channel.addEventListener("open", () =>
@@ -22,16 +56,8 @@ export class Sender {
     );
   }
 
-  // TODO get rid of this lurk
-  getConnection() {
-    return this.connection;
-  }
-
-  addIceCandidateListener(receiver) {
-    this.connection.addEventListener("icecandidate", async (event) => {
-      console.log("Local ICE candidate: ", event.candidate);
-      await receiver.getConnection().addIceCandidate(event.candidate);
-    });
+  addIceCandidate(candidate) {
+    this.connection.addIceCandidate(candidate);
   }
 
   onSendChannelStateChange() {
@@ -46,10 +72,9 @@ export class Sender {
     try {
       const desc = await this.connection.createOffer();
       await this.connection.setLocalDescription(desc);
-      console.log(`Offer from localConnection\n ${desc.sdp}`);
       return desc;
     } catch (e) {
-      console.log("Failed to create session description: ", e);
+      console.error("Failed to create session description: ", e);
     }
   }
 
@@ -58,26 +83,26 @@ export class Sender {
   }
 
   sendData() {
-    const { contents } = this;
+    console.log("this", this);
+    console.log("contents", this.contents);
 
     let offset = 0;
-    const contentLen = contents.byteLength;
+    const contentLen = this.contents.byteLength;
     while (offset < contentLen) {
       console.log(`send progress: ${offset}`);
-      const sliceContents = contents.slice(offset, offset + this.chunkSize);
+      const sliceContents = this.contents.slice(offset, offset + this.chunkSize);
       this.channel.send(sliceContents);
       offset += sliceContents.byteLength;
     }
   }
 }
 
-export class Receiver {
+export class Receiver extends Client {
   receivedSize = 0;
 
-  fileSize;
+  constructor(socket, fileSize) {
+    super(socket);
 
-  constructor(fileSize) {
-    this.connection = new RTCPeerConnection();
     this.receiveBuffer = new Uint8Array(fileSize);
 
     // this is a funky interface hack that turns the registered-callback interface
@@ -94,16 +119,8 @@ export class Receiver {
     );
   }
 
-  // TODO get rid of this lurk
-  getConnection() {
-    return this.connection;
-  }
-
-  addIceCandidateListener(sender) {
-    this.connection.addEventListener("icecandidate", async (event) => {
-      console.log("Remote ICE candidate: ", event.candidate);
-      await sender.getConnection().addIceCandidate(event.candidate);
-    });
+  addIceCandidate(candidate) {
+    this.connection.addIceCandidate(candidate).catch(e => console.error("adding ice candidate", e));
   }
 
   async answer(desc) {

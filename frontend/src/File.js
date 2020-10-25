@@ -6,12 +6,10 @@ export async function readFile(file) {
       reject(error);
     });
     reader.addEventListener("abort", (event) => {
-      console.log("File reading aborted: ", event);
       reject(event);
     });
 
     reader.addEventListener("load", (e) => {
-      console.log("FileRead.onload ", e);
       resolve(e.target.result);
     });
 
