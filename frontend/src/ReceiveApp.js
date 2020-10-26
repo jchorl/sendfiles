@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import config from "./Config.js";
+import { decryptMessage, importKeyFromBase64 } from "./Crypto.js";
 import { NEW_ANSWER, NEW_OFFER, NEW_ICE_CANDIDATE } from "./Constants.js";
 import { Receiver } from "./FileTransfer.js";
 
@@ -66,12 +67,13 @@ function ReceiveApp() {
           receiver.addIceCandidate(candidate);
           break;
         }
+        default:
+          throw new Error(`Unsupported message type ${body.type}`);
       }
     };
 
     const received = await receiver.completionPromise;
-    // TODO need to get privateKey base64 decoded into a uint8 array
-    const privateKey = await crypto.subtle.importKey("raw", transferDetails.privateKey);
+    const privateKey = await importKeyFromBase64(transferDetails.privateKey);
     const decrypted = await decryptMessage(received, privateKey, password);
     const downloadBlob = new Blob([decrypted], { type: "text/plain" });
     download(transferDetails.fileName, downloadBlob);

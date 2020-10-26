@@ -6,9 +6,9 @@ import {
   NEW_RECIPIENT,
   NEW_ICE_CANDIDATE,
 } from "./Constants.js";
-import { genKey, encryptMessage, decryptMessage } from "./Crypto.js";
+import { genKey, encryptMessage, exportKeyAsBase64 } from "./Crypto.js";
 import { readFile } from "./File.js";
-import { Sender, Receiver } from "./FileTransfer.js";
+import { Sender } from "./FileTransfer.js";
 import "./App.css";
 
 function getReceiverLink(id) {
@@ -42,10 +42,7 @@ function SendApp() {
     const validUntil = new Date(
       Date.now() + config.FILE_VALID_HOURS * 60 * 60 * 1000
     );
-    const exportedKey = await crypto.subtle.exportKey("raw", key);
-    const encodedKey = btoa(
-      String.fromCharCode(...new Uint8Array(exportedKey))
-    );
+    const encodedKey = await exportKeyAsBase64(key);
     const metadata = {
       fileName: fileDetails.name,
       contentLengthBytes: encrypted.byteLength,
@@ -88,6 +85,8 @@ function SendApp() {
           sender.addIceCandidate(candidate);
           break;
         }
+        default:
+          throw new Error(`Unsupported message type ${body.type}`);
       }
     };
 
@@ -117,6 +116,8 @@ function SendApp() {
           sender.sendMessage(resp);
           break;
         }
+        default:
+          throw new Error(`Unsupported message type ${body.type}`);
       }
     };
   };
