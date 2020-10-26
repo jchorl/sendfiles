@@ -283,3 +283,7 @@ standard message:
         "stage": "prod"
     }
 }
+
+## Design
+Colors: https://coolors.co/e7e247-3d3b30-4d5061-5c80bc-e9edde
+Favicon: https://favicon.io/favicon-generator/
