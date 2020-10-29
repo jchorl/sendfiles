@@ -287,3 +287,15 @@ standard message:
 ## Design
 Colors: https://coolors.co/e7e247-3d3b30-4d5061-5c80bc-e9edde
 Favicon: https://favicon.io/favicon-generator/
+- Font: `Inconsolata`
+- Font Size: 90px
+- Font Colour: #E9EDDE
+- Background Colour: #4D5061
+
+```shell
+$ mv ~/Downloads/favicon_io.zip .
+$ unzip favicon_io.zip
+$ mv favicon.ico frontend/public/favicon.ico
+$ mv android-chrome-192x192.png frontend/public/logo192.png
+$ mv android-chrome-512x512.png frontend/public/logo512.png
+```
