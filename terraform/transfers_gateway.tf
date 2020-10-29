@@ -1,11 +1,11 @@
 locals {
   transfers_routes = {
     post_transfer = {
-      route_key      = "POST /transfer"
+      route_key      = "POST /"
       operation_name = "PostTransfer"
     }
     get_transfers = {
-      route_key      = "GET /transfer"
+      route_key      = "GET /"
       operation_name = "GetTransfer"
     }
   }
@@ -14,7 +14,9 @@ locals {
 resource "aws_apigatewayv2_api" "transfers" {
   name                         = "transfers-http-api"
   protocol_type                = "HTTP"
-  disable_execute_api_endpoint = false # TODO change this to true when fronted by domain
+  disable_execute_api_endpoint = true
+
+  # TODO see if we can get rid of this
   cors_configuration {
     allow_methods = ["*"]
     allow_origins = ["*"]
@@ -62,4 +64,20 @@ resource "aws_apigatewayv2_route" "transfers_route" {
   route_key      = each.value.route_key
   operation_name = each.value.operation_name
   target         = "integrations/${aws_apigatewayv2_integration.transfers_integration.id}"
+}
+
+resource "aws_apigatewayv2_domain_name" "transfers" {
+  domain_name = "transfers.sendfiles.dev"
+
+  domain_name_configuration {
+    certificate_arn = aws_acm_certificate.transfers.arn
+    endpoint_type   = "REGIONAL"
+    security_policy = "TLS_1_2"
+  }
+}
+
+resource "aws_apigatewayv2_api_mapping" "transfers" {
+  api_id      = aws_apigatewayv2_api.transfers.id
+  domain_name = aws_apigatewayv2_domain_name.transfers.id
+  stage       = aws_apigatewayv2_stage.transfers_stage.id
 }
