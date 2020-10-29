@@ -19,7 +19,7 @@ resource "aws_apigatewayv2_api" "coord" {
   name                         = "coord-ws-api"
   protocol_type                = "WEBSOCKET"
   route_selection_expression   = "$request.body.action"
-  disable_execute_api_endpoint = false # TODO change this to true when fronted by domain
+  disable_execute_api_endpoint = true
 }
 
 resource "aws_apigatewayv2_deployment" "coord_deployment" {
@@ -60,4 +60,20 @@ resource "aws_apigatewayv2_route" "coord_route" {
   route_key      = each.value.route_key
   operation_name = each.value.operation_name
   target         = "integrations/${aws_apigatewayv2_integration.coord_integration.id}"
+}
+
+resource "aws_apigatewayv2_domain_name" "coord" {
+  domain_name = "coord.sendfiles.dev"
+
+  domain_name_configuration {
+    certificate_arn = aws_acm_certificate.coord.arn
+    endpoint_type   = "REGIONAL"
+    security_policy = "TLS_1_2"
+  }
+}
+
+resource "aws_apigatewayv2_api_mapping" "coord" {
+  api_id      = aws_apigatewayv2_api.coord.id
+  domain_name = aws_apigatewayv2_domain_name.coord.id
+  stage       = aws_apigatewayv2_stage.coord_stage.id
 }
