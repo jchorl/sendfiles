@@ -1,5 +1,5 @@
 resource "aws_acm_certificate" "coord" {
-  domain_name       = "coord.sendfiles.dev"
+  domain_name       = "coord.${local.domain}"
   validation_method = "DNS"
 
   lifecycle {

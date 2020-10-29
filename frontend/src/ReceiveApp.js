@@ -33,7 +33,7 @@ function ReceiveApp() {
     params.set("id", transferId);
 
     const transferDetails = await fetch(
-      config.TRANSFER_API + "/transfer?" + params.toString(),
+      config.TRANSFER_API + "?" + params.toString(),
       {
         method: "GET",
         mode: "cors", // TODO make this not CORS if possible

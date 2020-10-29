@@ -1,5 +1,17 @@
 resource "aws_route53_zone" "sendfiles" {
-  name = "sendfiles.dev"
+  name = local.domain
+}
+
+resource "aws_route53_record" "root" {
+  name    = local.domain
+  type    = "A"
+  zone_id = aws_route53_zone.sendfiles.zone_id
+
+  alias {
+    name                   = aws_cloudfront_distribution.distribution.domain_name
+    zone_id                = aws_cloudfront_distribution.distribution.hosted_zone_id
+    evaluate_target_health = false
+  }
 }
 
 resource "aws_route53_record" "transfers" {

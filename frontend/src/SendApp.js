@@ -50,7 +50,7 @@ function SendApp() {
       validUntil: validUntil,
     };
 
-    const transferDetails = await fetch(config.TRANSFER_API + "/transfer", {
+    const transferDetails = await fetch(config.TRANSFER_API, {
       method: "POST",
       mode: "cors", // TODO make this not CORS if possible
       headers: {

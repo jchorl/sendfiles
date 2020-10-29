@@ -1,5 +1,5 @@
 resource "aws_acm_certificate" "transfers" {
-  domain_name       = "transfers.sendfiles.dev"
+  domain_name       = "transfers.${local.domain}"
   validation_method = "DNS"
 
   lifecycle {

@@ -14,4 +14,4 @@ docker run -it --rm \
     -w /contents \
     --env-file .aws_creds \
     amazon/aws-cli \
-    s3 cp --recursive . s3://securesend-site/
+    s3 sync --delete . s3://securesend-site/

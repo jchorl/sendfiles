@@ -63,7 +63,7 @@ resource "aws_apigatewayv2_route" "coord_route" {
 }
 
 resource "aws_apigatewayv2_domain_name" "coord" {
-  domain_name = "coord.sendfiles.dev"
+  domain_name = "coord.${local.domain}"
 
   domain_name_configuration {
     certificate_arn = aws_acm_certificate.coord.arn

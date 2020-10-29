@@ -8,7 +8,7 @@ function App() {
 
   return (
     <div>
-      <header>FileTransfer</header>
+      <header>SendFiles</header>
       {url.pathname.startsWith("/receive") ? <ReceiveApp /> : <SendApp />}
     </div>
   );

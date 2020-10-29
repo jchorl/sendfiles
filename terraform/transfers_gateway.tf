@@ -67,7 +67,7 @@ resource "aws_apigatewayv2_route" "transfers_route" {
 }
 
 resource "aws_apigatewayv2_domain_name" "transfers" {
-  domain_name = "transfers.sendfiles.dev"
+  domain_name = "transfers.${local.domain}"
 
   domain_name_configuration {
     certificate_arn = aws_acm_certificate.transfers.arn
