@@ -73,6 +73,12 @@ resource "aws_cloudfront_distribution" "distribution" {
   enabled             = true
   default_root_object = "index.html"
 
+  custom_error_response {
+    error_code         = 403
+    response_code      = 200
+    response_page_path = "/index.html"
+  }
+
   default_cache_behavior {
     viewer_protocol_policy = "redirect-to-https"
 

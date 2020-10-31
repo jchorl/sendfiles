@@ -27,10 +27,11 @@ async fn main(
         db_client: Box::new(DynamoDbClient::new(Region::default()).with_retries(Policy::default())),
         gw_client: Box::new(ApiGatewayManagementApiClient::new(Region::Custom {
             name: Region::default().name().to_string(),
-            endpoint: format!(
-                "{}/{}",
-                request.request_context.domain_name, request.request_context.stage
-            ),
+
+            // this works because coord.sendfiles.dev is aliased to "domain/stage"
+            // ordinairily, you'd need
+            // request.request_context.domain_name/request.request_context.stage
+            endpoint: request.request_context.domain_name.clone(),
         })),
         offers_table: "OffersTest".to_string(),
     };
