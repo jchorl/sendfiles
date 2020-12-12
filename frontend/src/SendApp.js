@@ -76,7 +76,6 @@ function SendApp() {
         case NEW_ANSWER: {
           const sender = senders[senderAddress];
           await sender.registerAnswer(body.answer);
-          sender.registerIceCandidateListener();
           break;
         }
         case NEW_ICE_CANDIDATE: {

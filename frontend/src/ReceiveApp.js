@@ -59,7 +59,6 @@ function ReceiveApp() {
           const resp = { type: NEW_ANSWER, answer };
           receiver.setRecipientAddress(senderAddress);
           receiver.sendMessage(resp);
-          receiver.registerIceCandidateListener();
           break;
         }
         case NEW_ICE_CANDIDATE: {

@@ -7,6 +7,7 @@ class Client {
 
     const configuration = { iceServers: [{ urls: config.STUN_SERVER }] };
     this.connection = new RTCPeerConnection(configuration);
+    this.registerIceCandidateListener();
   }
 
   registerIceCandidateListener() {
@@ -18,6 +19,12 @@ class Client {
         });
       }
     });
+  }
+
+  addIceCandidate(candidate) {
+    this.connection
+      .addIceCandidate(candidate)
+      .catch((e) => console.error("adding ice candidate", e));
   }
 
   setRecipientAddress(addr) {
@@ -58,13 +65,8 @@ export class Sender extends Client {
     );
   }
 
-  addIceCandidate(candidate) {
-    this.connection.addIceCandidate(candidate);
-  }
-
   onSendChannelStateChange() {
     const readyState = this.channel.readyState;
-    console.log(`Send channel state is: ${readyState}`);
     if (readyState === "open") {
       this.sendData();
     }
@@ -85,9 +87,6 @@ export class Sender extends Client {
   }
 
   sendData() {
-    console.log("this", this);
-    console.log("contents", this.contents);
-
     let offset = 0;
     const contentLen = this.contents.byteLength;
     while (offset < contentLen) {
@@ -116,18 +115,10 @@ export class Receiver extends Client {
       this.resolveCompletionPromise = resolve;
     });
 
-    console.log("Created remote peer connection object remoteConnection");
-
     this.fileSize = fileSize;
     this.connection.addEventListener("datachannel", (event) =>
       this.receiveChannelCallback(event)
     );
-  }
-
-  addIceCandidate(candidate) {
-    this.connection
-      .addIceCandidate(candidate)
-      .catch((e) => console.error("adding ice candidate", e));
   }
 
   async answer(desc) {
@@ -135,15 +126,13 @@ export class Receiver extends Client {
     try {
       const answer = await this.connection.createAnswer();
       await this.connection.setLocalDescription(answer);
-      console.log(`Answer from remoteConnection\n ${desc.sdp}`);
       return answer;
     } catch (e) {
-      console.log("Failed to create session description: ", e);
+      console.error("Failed to create session description: ", e);
     }
   }
 
   receiveChannelCallback(event) {
-    console.log("Receive Channel Callback");
     const receiveChannel = event.channel;
     receiveChannel.binaryType = "arraybuffer";
     receiveChannel.onmessage = (event) => this.onReceiveMessageCallback(event);
@@ -169,6 +158,5 @@ export class Receiver extends Client {
 
   async onReceiveChannelStateChange(channel) {
     const readyState = channel.readyState;
-    console.log(`Receive channel state is: ${readyState}`);
   }
 }
