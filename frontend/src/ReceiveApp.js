@@ -26,11 +26,13 @@ function ReceiveApp() {
     Math.random() < 0.5 ? "hunter2" : "correct-horse-battery-staple"
   );
   const [transferDetails, setTransferDetails] = useState();
+  const [fetchTransferError, setFetchTransferError] = useState();
 
   const currentURL = new URL(window.location.href);
   // turns /receive/aaa into aaa
   const transferId = currentURL.pathname.match(/receive\/([\w-]+)\/?/)[1];
 
+  // foremost, fetch transfer details
   useEffect(() => {
     const params = new URLSearchParams();
     params.set("id", transferId);
@@ -42,15 +44,28 @@ function ReceiveApp() {
         "Content-Type": "application/json",
       },
     })
+      .then((resp) => {
+        if (resp.status === 404) {
+          throw new Error(
+            "Transfer not found. This could be because the upload expired. Please ask the sender to try again."
+          );
+        }
+        return resp;
+      })
       .then((resp) => resp.json())
       .then((details) =>
         setTransferDetails({
           ...details,
           validUntil: new Date(details.validUntil),
         })
-      );
-  }, []);
+      )
+      .catch((e) => {
+        console.error("fetching transfer", e);
+        setFetchTransferError(e);
+      });
+  }, [transferId]);
 
+  // code to receive the actual file via webrtc
   const receive = async (e) => {
     e.preventDefault();
 
@@ -105,40 +120,46 @@ function ReceiveApp() {
                 Valid until: {transferDetails.validUntil.toLocaleString()}
               </div>
             </>
-          ) : (
+          ) : !fetchTransferError ? (
             <div>Loading...</div>
-          )}
+          ) : null}
         </div>
-        <div className="form-field">
-          <label htmlFor="password">Enter password</label>
-          <div className="form-description">
-            The password will be used to decrypt your file. You will need to get
-            it from the recipient yourself.
-          </div>
-          <input
-            id="password"
-            type="password"
-            placeholder={passwordPlaceholder}
-            onChange={(e) => setPassword(e.target.value)}
-            value={password}
-          />
-        </div>
-        <div>
-          <label htmlFor="submit">Receive</label>
-          <div className="form-description">
-            Clicking <code>Receive</code> will transfer the encrypted file from
-            the sender. It'll then decrypt it using the password and download
-            the file to your computer.
-          </div>
-          <button
-            id="submit"
-            type="submit"
-            className="filled receive-button"
-            onClick={receive}
-          >
-            Receive
-          </button>
-        </div>
+        {transferDetails ? (
+          <>
+            <div className="form-field">
+              <label htmlFor="password">Enter password</label>
+              <div className="form-description">
+                The password will be used to decrypt your file. You will need to
+                get it from the recipient yourself.
+              </div>
+              <input
+                id="password"
+                type="password"
+                placeholder={passwordPlaceholder}
+                onChange={(e) => setPassword(e.target.value)}
+                value={password}
+              />
+            </div>
+            <div>
+              <label htmlFor="submit">Receive</label>
+              <div className="form-description">
+                Clicking <code>Receive</code> will transfer the encrypted file
+                from the sender. It'll then decrypt it using the password and
+                download the file to your computer.
+              </div>
+              <button
+                id="submit"
+                type="submit"
+                className="filled receive-button"
+                onClick={receive}
+              >
+                Receive
+              </button>
+            </div>
+          </>
+        ) : fetchTransferError ? (
+          <div className="error-text">{fetchTransferError.message}</div>
+        ) : null}
       </form>
     </div>
   );

@@ -15,3 +15,7 @@
 .form-description {
   margin-bottom: 6px;
 }
+
+.error-text {
+  color: red;
+}

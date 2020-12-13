@@ -79,7 +79,7 @@ impl Api {
             .unwrap()
             .to_string();
 
-        let details_key = TransferDetailsKey { id: details_id };
+        let details_key = TransferDetailsKey { id: details_id.clone() };
 
         let result = self
             .db_client
@@ -97,7 +97,16 @@ impl Api {
                 .unwrap());
         }
 
-        let details = TransferDetails::from_attrs(result.unwrap().item.unwrap()).unwrap();
+        let item = result.unwrap().item;
+        if let None = item {
+            println!("item not found: {}", details_id);
+            return Ok(Response::builder()
+                .status(404)
+                .body("transfer not found".to_string())
+                .unwrap());
+        }
+
+        let details = TransferDetails::from_attrs(item.unwrap()).unwrap();
         let resp = serde_json::to_string(&details)?;
         Ok(Response::new(resp))
     }
