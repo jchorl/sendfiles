@@ -1,15 +1,16 @@
 import React, { useState } from "react";
-import config from "./Config.js";
+import config from "./Config";
 import {
   NEW_ANSWER,
   NEW_OFFER,
   NEW_RECIPIENT,
   NEW_ICE_CANDIDATE,
-} from "./Constants.js";
-import { genKey, encryptMessage, exportKeyAsBase64 } from "./Crypto.js";
-import { readFile } from "./File.js";
-import { Sender } from "./FileTransfer.js";
-import "./App.css";
+} from "./Constants";
+import { genKey, encryptMessage, exportKeyAsBase64 } from "./Crypto";
+import { readFile } from "./File";
+import { Sender } from "./FileTransfer";
+import ClipboardButton from "./ClipboardButton";
+import "./SendApp.css";
 
 function getReceiverLink(id) {
   const currentURL = new URL(window.location.href);
@@ -17,9 +18,12 @@ function getReceiverLink(id) {
 }
 
 function SendApp() {
-  const [password, setPassword] = useState("");
   const [fileDetails, setFileDetails] = useState();
-  const [receiveLink, setReceiveLink] = useState("");
+  const [password, setPassword] = useState("");
+  const [receiveLink, setReceiveLink] = useState();
+  const [passwordPlaceholder] = useState(
+    Math.random() < 0.5 ? "hunter2" : "correct-horse-battery-staple"
+  );
 
   const onFileSelected = (e) => {
     const file = e.target.files[0];
@@ -124,30 +128,82 @@ function SendApp() {
   return (
     <div>
       <form>
-        <div>
-          <label htmlFor="password" className="file-select-label">
-            Enter password
-          </label>
+        <div className="form-field">
+          <label>How it works</label>
+          <div>
+            <a href="/">sendfiles.dev</a> allows you to transfer files directly
+            from one browser to another without going through an intermediary
+            server by utilizing{" "}
+            <a
+              href="https://webrtc.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              WebRTC
+            </a>
+            . Files are encrypted in your browser using the password you
+            provide. The files are decrypted on the receiver's side using the
+            same password. Click <a href="/about">here</a> to read about the
+            security properties.
+          </div>
+        </div>
+        <div className="form-field">
+          <label htmlFor="file_input">Select a file to transfer</label>
+          <div className="form-description">
+            Note the file will not be uploaded to a server. When you click
+            submit, a unique link will be generated allowing the receiver to
+            download the file directly from your browser.
+          </div>
+          <input id="file_input" type="file" onChange={onFileSelected} />
+        </div>
+        <div className="form-field">
+          <label htmlFor="password">Choose a password</label>
+          <div className="form-description">
+            The password will be used to encrypt your file. You will need to
+            share it with the recipient yourself.
+          </div>
           <input
             id="password"
             type="password"
+            placeholder={passwordPlaceholder}
             onChange={(e) => setPassword(e.target.value)}
             value={password}
           />
         </div>
-        <div>
-          <label htmlFor="file_input" className="file-select-label">
-            Select a file to transfer
-          </label>
-          <input id="file_input" type="file" onChange={onFileSelected} />
-        </div>
-        <div>
-          <button id="submit" type="submit" onClick={sender}>
-            Submit
-          </button>
-        </div>
+        {!receiveLink ? (
+          <div>
+            <label htmlFor="submit">Generate link</label>
+            <div className="form-description">
+              Clicking <code>Generate</code> will encrypt your file in your
+              browser using the provided password. It'll then generate a unique
+              link that you can share for users to transfer the encrypted file
+              directly from your browser.
+            </div>
+            <button
+              id="submit"
+              type="submit"
+              className="filled submit-button"
+              onClick={sender}
+            >
+              Generate
+            </button>
+          </div>
+        ) : (
+          <div>
+            <label>Share</label>
+            <div className="receive-link-container">
+              <div className="receive-link">
+                <a href={receiveLink} target="_blank" rel="noopener noreferrer">
+                  {receiveLink}
+                </a>
+              </div>
+              <div className="copy-button">
+                <ClipboardButton content={receiveLink} />
+              </div>
+            </div>
+          </div>
+        )}
       </form>
-      {receiveLink && <div>Receiver link: {receiveLink}</div>}
     </div>
   );
 }

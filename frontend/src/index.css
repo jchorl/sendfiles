@@ -11,3 +11,77 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+html {
+  background-color: #f6f8fa;
+}
+
+#root {
+  display: flex;
+  justify-content: center;
+  color: #4d5061;
+  font-size: 16px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+h1 {
+  margin: 0;
+  font-weight: 500;
+}
+
+button {
+  padding: 8px 30px;
+  border-radius: 6px;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.2s cubic-bezier(0.3, 0, 0.5, 1);
+  transition-property: color, background-color, border-color;
+}
+
+button.filled {
+  background-color: #5c80bc;
+  color: #ffffff;
+}
+
+button.filled:hover {
+  background-color: #294d89; /* 5c80bc, 20% darker */
+}
+
+label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+input {
+  background-color: #fafbfc;
+  box-shadow: none;
+  border-radius: 3px;
+  border: 1px solid #e1e4e8;
+  padding: 10px 12px;
+  transition: 0.2s cubic-bezier(0.3, 0, 0.5, 1);
+  transition-property: color, background-color, border-color;
+  width: 100%;
+  font-size: 16px;
+}
+
+input:hover,
+input:focus {
+  background-color: #ffffff;
+}
+
+input::placeholder {
+  color: #9a9a9a;
+}
+
+a {
+  color: #294d89; /* #5c80bc, darkened 20% */
+}
+
+a:visited {
+  color: #3d3b30;
+}

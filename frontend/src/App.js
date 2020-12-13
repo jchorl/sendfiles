@@ -1,14 +1,16 @@
 import React from "react";
 import SendApp from "./SendApp";
 import ReceiveApp from "./ReceiveApp";
+import Nav from "./Nav";
 import "./App.css";
 
 function App() {
   const url = new URL(window.location.href);
 
   return (
-    <div>
-      <header>SendFiles</header>
+    <div className="app">
+      <h1>sendfiles.dev</h1>
+      <Nav />
       {url.pathname.startsWith("/receive") ? <ReceiveApp /> : <SendApp />}
     </div>
   );

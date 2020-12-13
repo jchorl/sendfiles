@@ -1,0 +1,15 @@
+.clipboard-button {
+  padding: 8px;
+  border: 1px solid #e1e4e8;
+  background-color: #fafbfc;
+  border-radius: 3px;
+  height: 100%;
+}
+
+.clipboard-button svg {
+  height: 20px;
+}
+
+.clipboard-button path {
+  fill: #646464;
+}

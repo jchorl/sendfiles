@@ -1,0 +1,19 @@
+.submit-button {
+  margin-top: 10px;
+}
+
+.receive-link-container {
+  display: flex;
+}
+
+.receive-link {
+  background-color: #fafbfc;
+  box-shadow: none;
+  border-radius: 3px;
+  border: 1px solid #e1e4e8;
+  padding: 10px 12px;
+  margin-right: 10px;
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+}

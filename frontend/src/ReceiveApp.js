@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import config from "./Config.js";
-import { decryptMessage, importKeyFromBase64 } from "./Crypto.js";
-import { NEW_ANSWER, NEW_OFFER, NEW_ICE_CANDIDATE } from "./Constants.js";
-import { Receiver } from "./FileTransfer.js";
+import config from "./Config";
+import { decryptMessage, importKeyFromBase64 } from "./Crypto";
+import { NEW_ANSWER, NEW_OFFER, NEW_ICE_CANDIDATE } from "./Constants";
+import { Receiver } from "./FileTransfer";
+import "./ReceiveApp.css";
 
 function download(filename, blob) {
   const downloadLink = URL.createObjectURL(blob);
@@ -21,6 +22,9 @@ function download(filename, blob) {
 
 function ReceiveApp() {
   const [password, setPassword] = useState("");
+  const [passwordPlaceholder] = useState(
+    Math.random() < 0.5 ? "hunter2" : "correct-horse-battery-staple"
+  );
 
   const receive = async (e) => {
     e.preventDefault();
@@ -80,21 +84,53 @@ function ReceiveApp() {
 
   return (
     <div>
-      Receive App
       <form>
-        <div>
-          <label htmlFor="password" className="file-select-label">
-            Enter password
-          </label>
+        <div className="form-field">
+          <label>How it works</label>
+          <div>
+            <a href="/">sendfiles.dev</a> allows you to transfer files directly
+            from one browser to another without going through an intermediary
+            server by utilizing{" "}
+            <a
+              href="https://webrtc.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              WebRTC
+            </a>
+            . Files are encrypted in your browser using the password you
+            provide. The files are decrypted on the receiver's side using the
+            same password. Click <a href="/about">here</a> to read about the
+            security properties.
+          </div>
+        </div>
+        <div className="form-field">
+          <label htmlFor="password">Enter password</label>
+          <div className="form-description">
+            The password will be used to decrypt your file. You will need to get
+            it from the recipient yourself.
+          </div>
           <input
             id="password"
             type="password"
+            placeholder={passwordPlaceholder}
             onChange={(e) => setPassword(e.target.value)}
             value={password}
           />
         </div>
         <div>
-          <button id="submit" type="submit" onClick={receive}>
+          <label htmlFor="submit">Receive</label>
+          <div className="form-description">
+            Clicking <code>Receive</code> will transfer the encrypted file from
+            the sender. It'll then decrypt it using the password and download
+            the file to your computer.
+          </div>
+          <button
+            id="submit"
+            type="submit"
+            className="filled receive-button"
+            onClick={receive}
+          >
             Receive
           </button>
         </div>

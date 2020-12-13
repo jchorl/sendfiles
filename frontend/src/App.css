@@ -1,3 +1,17 @@
-.file-select-label {
-  margin-right: 10px;
+.app {
+  background-color: #ffffff;
+  padding: 32px;
+  margin: 32px;
+  border-radius: 3px;
+  border: 1px solid #e1e4e8;
+  flex-grow: 1;
+  max-width: 800px;
+}
+
+.form-field {
+  margin: 30px 0;
+}
+
+.form-description {
+  margin-bottom: 6px;
 }
