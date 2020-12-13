@@ -17,3 +17,8 @@
   display: flex;
   align-items: center;
 }
+
+.instruction-browser-open {
+  font-style: italic;
+  margin: 20px 0;
+}

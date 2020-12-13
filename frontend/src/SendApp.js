@@ -142,7 +142,7 @@ function SendApp() {
               WebRTC
             </a>
             . Files are encrypted in your browser using the password you
-            provide. The files are decrypted on the receiver's side using the
+            provide. The files are decrypted in the receiver's browser using the
             same password. Click <a href="/about">here</a> to read about the
             security properties.
           </div>
@@ -160,7 +160,7 @@ function SendApp() {
           <label htmlFor="password">Choose a password</label>
           <div className="form-description">
             The password will be used to encrypt your file. You will need to
-            share it with the recipient yourself.
+            share it with the recipient.
           </div>
           <input
             id="password"
@@ -191,6 +191,14 @@ function SendApp() {
         ) : (
           <div>
             <label>Share</label>
+            <div className="instruction-browser-open">
+              You'll need to leave this window open until the file is completely
+              copied to their browser.
+            </div>
+            <div className="form-description">
+              Send the following link to the recipient, along with your
+              password:
+            </div>
             <div className="receive-link-container">
               <div className="receive-link">
                 <a href={receiveLink} target="_blank" rel="noopener noreferrer">

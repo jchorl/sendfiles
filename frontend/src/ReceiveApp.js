@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import config from "./Config";
 import { decryptMessage, importKeyFromBase64 } from "./Crypto";
 import { NEW_ANSWER, NEW_OFFER, NEW_ICE_CANDIDATE } from "./Constants";
@@ -25,27 +25,34 @@ function ReceiveApp() {
   const [passwordPlaceholder] = useState(
     Math.random() < 0.5 ? "hunter2" : "correct-horse-battery-staple"
   );
+  const [transferDetails, setTransferDetails] = useState();
 
-  const receive = async (e) => {
-    e.preventDefault();
+  const currentURL = new URL(window.location.href);
+  // turns /receive/aaa into aaa
+  const transferId = currentURL.pathname.match(/receive\/([\w-]+)\/?/)[1];
 
-    const currentURL = new URL(window.location.href);
-    // turns /receive/aaa into aaa
-    const transferId = currentURL.pathname.match(/receive\/([\w-]+)\/?/)[1];
-
+  useEffect(() => {
     const params = new URLSearchParams();
     params.set("id", transferId);
 
-    const transferDetails = await fetch(
-      config.TRANSFER_API + "?" + params.toString(),
-      {
-        method: "GET",
-        mode: "cors", // TODO make this not CORS if possible
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    ).then((resp) => resp.json());
+    fetch(config.TRANSFER_API + "?" + params.toString(), {
+      method: "GET",
+      mode: "cors", // TODO make this not CORS if possible
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((resp) => resp.json())
+      .then((details) =>
+        setTransferDetails({
+          ...details,
+          validUntil: new Date(details.validUntil),
+        })
+      );
+  }, []);
+
+  const receive = async (e) => {
+    e.preventDefault();
 
     const socketUrl = new URL(config.COORD_API);
     socketUrl.searchParams.set("role", "receiver");
@@ -86,23 +93,21 @@ function ReceiveApp() {
     <div>
       <form>
         <div className="form-field">
-          <label>How it works</label>
-          <div>
-            <a href="/">sendfiles.dev</a> allows you to transfer files directly
-            from one browser to another without going through an intermediary
-            server by utilizing{" "}
-            <a
-              href="https://webrtc.org/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              WebRTC
-            </a>
-            . Files are encrypted in your browser using the password you
-            provide. The files are decrypted on the receiver's side using the
-            same password. Click <a href="/about">here</a> to read about the
-            security properties.
-          </div>
+          <label>File details</label>
+          {transferDetails ? (
+            <>
+              <div>Filename: {transferDetails.fileName}</div>
+              <div>
+                Encrypted content length: {transferDetails.contentLengthBytes}{" "}
+                bytes
+              </div>
+              <div>
+                Valid until: {transferDetails.validUntil.toLocaleString()}
+              </div>
+            </>
+          ) : (
+            <div>Loading...</div>
+          )}
         </div>
         <div className="form-field">
           <label htmlFor="password">Enter password</label>
