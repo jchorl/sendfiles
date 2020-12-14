@@ -12,9 +12,9 @@ use dynomite::{
 };
 use lambda::{lambda, Context};
 use rusoto_apigatewaymanagementapi::{
-    ApiGatewayManagementApi, ApiGatewayManagementApiClient, PostToConnectionRequest,
+    ApiGatewayManagementApi, ApiGatewayManagementApiClient, PostToConnectionRequest, PostToConnectionError
 };
-use rusoto_core::Region;
+use rusoto_core::{Region, RusotoError};
 use serde_json::json;
 
 #[lambda]
@@ -162,13 +162,23 @@ impl Api {
             body: json!({"type": "NEW_RECIPIENT"}).to_string(),
         };
         let message_encoded = serde_json::to_string(&message)?;
-        self.gw_client
+        let post_result = self.gw_client
             .post_to_connection(PostToConnectionRequest {
                 connection_id: offer.api_gateway_connection_id,
                 data: Bytes::from(message_encoded),
                 ..PostToConnectionRequest::default()
             })
-            .await?;
+            .await;
+        if let Err(e) = post_result {
+            match e {
+                RusotoError::Service(PostToConnectionError::Gone(_)) => {
+                    return Err(Box::new(errors::SenderGoneError {}));
+                },
+                _ => {
+                    return Err(Box::new(e));
+                }
+            }
+        }
         Ok(())
     }
 }
