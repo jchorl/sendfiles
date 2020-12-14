@@ -1,8 +1,8 @@
 resource "aws_dynamodb_table" "offers_table" {
   name           = "OffersTest"
   billing_mode   = "PROVISIONED"
-  read_capacity  = 20
-  write_capacity = 20
+  read_capacity  = 2
+  write_capacity = 2
   hash_key       = "transfer_id"
 
   attribute {
