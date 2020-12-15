@@ -4,6 +4,16 @@
   margin: 20px 0;
 }
 
+.mobile-hidden {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .mobile-hidden {
+    display: block;
+  }
+}
+
 .divider {
   margin: 0 20px;
 }
