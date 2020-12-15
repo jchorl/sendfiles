@@ -35,25 +35,25 @@ function SendApp() {
     setFileDetails(file);
   };
 
-  const sender = async (e) => {
+  const initiateTransfer = async (e) => {
     e.preventDefault();
 
+    // deal with keys/encryption
     const key = await genKey();
     const contents = await readFile(fileDetails);
     const encrypted = await encryptMessage(contents, key, password);
+    const encodedKey = await exportKeyAsBase64(key);
 
-    // first, post metadata
+    // post metadata to metadata service
     const validUntil = new Date(
       Date.now() + config.FILE_VALID_HOURS * 60 * 60 * 1000
     );
-    const encodedKey = await exportKeyAsBase64(key);
     const metadata = {
       fileName: fileDetails.name,
       contentLengthBytes: encrypted.byteLength,
       privateKey: encodedKey,
       validUntil: validUntil,
     };
-
     const transferDetails = await fetch(config.TRANSFER_API, {
       method: "POST",
       mode: "cors", // TODO make this not CORS if possible
@@ -63,15 +63,19 @@ function SendApp() {
       body: JSON.stringify(metadata),
     }).then((resp) => resp.json());
 
+    // set up receiver link
     const receiverLink = getReceiverLink(transferDetails.id);
     setReceiveLink(receiverLink);
 
+    // open websocket to coordinate webrtc connection and transfer the file
     const socketUrl = new URL(config.COORD_API);
     socketUrl.searchParams.set("role", "offerer");
     socketUrl.searchParams.set("transfer_id", transferDetails.id);
     const socket = new WebSocket(socketUrl);
 
     const senders = new Map();
+
+    // coordination logic for webrtc
     const senderSocketOnMessage = async (event) => {
       const { sender: senderAddress, body: rawBody } = JSON.parse(event.data);
       const body = JSON.parse(rawBody);
@@ -92,7 +96,6 @@ function SendApp() {
           throw new Error(`Unsupported message type ${body.type}`);
       }
     };
-
     socket.onmessage = async function (event) {
       const { sender: senderAddress, body: rawBody } = JSON.parse(event.data);
       const body = JSON.parse(rawBody);
@@ -183,7 +186,7 @@ function SendApp() {
               id="submit"
               type="submit"
               className="filled submit-button"
-              onClick={sender}
+              onClick={initiateTransfer}
             >
               Generate
             </button>

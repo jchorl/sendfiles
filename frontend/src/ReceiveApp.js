@@ -3,22 +3,8 @@ import config from "./Config";
 import { decryptMessage, importKeyFromBase64 } from "./Crypto";
 import { NEW_ANSWER, NEW_OFFER, NEW_ICE_CANDIDATE } from "./Constants";
 import { Receiver } from "./FileTransfer";
+import { downloadFile } from "./Utils";
 import "./ReceiveApp.css";
-
-function download(filename, blob) {
-  const downloadLink = URL.createObjectURL(blob);
-
-  const element = document.createElement("a");
-  element.setAttribute("href", downloadLink);
-  element.setAttribute("download", filename);
-
-  element.style.display = "none";
-  document.body.appendChild(element);
-
-  element.click();
-
-  document.body.removeChild(element);
-}
 
 function ReceiveApp() {
   const [password, setPassword] = useState("");
@@ -28,11 +14,11 @@ function ReceiveApp() {
   const [transferDetails, setTransferDetails] = useState();
   const [fetchTransferError, setFetchTransferError] = useState();
 
-  const currentURL = new URL(window.location.href);
   // turns /receive/aaa into aaa
+  const currentURL = new URL(window.location.href);
   const transferId = currentURL.pathname.match(/receive\/([\w-]+)\/?/)[1];
 
-  // foremost, fetch transfer details
+  // fetch transfer details
   useEffect(() => {
     const params = new URLSearchParams();
     params.set("id", transferId);
@@ -66,9 +52,10 @@ function ReceiveApp() {
   }, [transferId]);
 
   // code to receive the actual file via webrtc
-  const receive = async (e) => {
+  const initiateReceive = async (e) => {
     e.preventDefault();
 
+    // open websocket to coordinate webrtc connection and transfer the file
     const socketUrl = new URL(config.COORD_API);
     socketUrl.searchParams.set("role", "receiver");
     socketUrl.searchParams.set("transfer_id", transferDetails.id);
@@ -98,10 +85,12 @@ function ReceiveApp() {
     };
 
     const received = await receiver.completionPromise;
+
+    // decrypt/download
     const privateKey = await importKeyFromBase64(transferDetails.privateKey);
     const decrypted = await decryptMessage(received, privateKey, password);
     const downloadBlob = new Blob([decrypted], { type: "text/plain" });
-    download(transferDetails.fileName, downloadBlob);
+    downloadFile(transferDetails.fileName, downloadBlob);
   };
 
   return (
@@ -140,7 +129,7 @@ function ReceiveApp() {
                 value={password}
               />
             </div>
-            <div>
+            <div className="form-field">
               <label htmlFor="submit">Receive</label>
               <div className="form-description">
                 Clicking <code>Receive</code> will transfer the encrypted file
@@ -151,10 +140,16 @@ function ReceiveApp() {
                 id="submit"
                 type="submit"
                 className="filled receive-button"
-                onClick={receive}
+                onClick={initiateReceive}
               >
                 Receive
               </button>
+            </div>
+            <div>
+              <label>Progress</label>
+              <div className="form-description">
+                Hrm some progress here hehe
+              </div>
             </div>
           </>
         ) : fetchTransferError ? (

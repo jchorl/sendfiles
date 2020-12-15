@@ -85,3 +85,11 @@ a {
 a:visited {
   color: #3d3b30;
 }
+
+code {
+  color: #294d89;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background-color: #fafbfc;
+  padding: 0px 3px;
+}

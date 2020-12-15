@@ -9,6 +9,8 @@ function Nav() {
       <a href="/">Transfer Files</a>
       <span className="divider">|</span>
       <a href="/about">About</a>
+      <span className="divider">|</span>
+      <a href="https://github.com/jchorl/sendfiles">Source</a>
     </div>
   );
 }

@@ -8,6 +8,17 @@
   max-width: 800px;
 }
 
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.tagline {
+  font-size: 12px;
+}
+
 .form-field {
   margin: 40px 0;
 }
@@ -18,4 +29,8 @@
 
 .error-text {
   color: red;
+}
+
+.bold {
+  font-weight: 700;
 }
