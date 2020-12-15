@@ -13,7 +13,7 @@ Transfers:
   - `Transfers API Gateway` - HTTP gateway sitting in front of `Transfers Lambda`
 
 Coordination:
-  - `Sessions DynamoDB` - stores API Gateway websocket IDs of senders/receivers so they can communicate with each other
+  - `Sessions DynamoDB` - stores API Gateway websocket IDs of file owners so receivers can request files and coordinate WebRTC
   - `Coord Lambda` - allows sender/receiver to communicate in order to set up [WebRTC](https://webrtc.org) connections
   - `Coord API Gateway` - Websocket gateway sitting in front of `Coord Lambda`, keeping websockets open
 

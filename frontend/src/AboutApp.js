@@ -63,7 +63,8 @@ function AboutApp() {
           <ul>
             <li>
               <code>Sessions DynamoDB</code> - stores API Gateway websocket IDs
-              of senders/receivers so they can communicate with each other
+              of file owners so receivers can request files and coordinate
+              WebRTC
             </li>
             <li>
               <code>Coord Lambda</code> - allows sender/receiver to communicate
