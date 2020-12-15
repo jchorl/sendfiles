@@ -85,7 +85,11 @@ function AboutApp() {
         </div>
       </div>
       <a href="/architecture.png" target="_blank">
-        <img className="arch-img" src="/architecture.png" />
+        <img
+          className="arch-img"
+          src="/architecture.png"
+          alt="architecture diagram"
+        />
       </a>
       <div className="form-field">
         <label>Security</label>
@@ -109,8 +113,12 @@ function AboutApp() {
                 WebRTC
               </a>
               . You can read about WebRTC security{" "}
-              <a href="" target="_blank" rel="noopener noreferrer">
-                https://webrtc-security.github.io/
+              <a
+                href="https://webrtc-security.github.io/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                here
               </a>
               .
             </li>

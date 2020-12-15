@@ -157,6 +157,6 @@ export class Receiver extends Client {
   }
 
   async onReceiveChannelStateChange(channel) {
-    const readyState = channel.readyState;
+    console.log(`channel readyState: ${channel.readyState}`);
   }
 }
