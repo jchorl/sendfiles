@@ -4,4 +4,3 @@ backend/*/target
 output.json
 terraform/.terraform
 terraform/.terraform.lock.hcl
-terraform/terraform.tfstate*
