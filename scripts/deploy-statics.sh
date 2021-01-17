@@ -12,6 +12,6 @@ docker run -it --rm \
 docker run -it --rm \
     -v "$(pwd)/build/frontend":/contents \
     -w /contents \
-    --env-file .aws_creds \
+    --env-file .env \
     amazon/aws-cli \
     s3 sync --delete . s3://securesend-site/

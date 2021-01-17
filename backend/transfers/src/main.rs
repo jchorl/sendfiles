@@ -20,7 +20,7 @@ type Error = Box<dyn std::error::Error + Send + Sync + 'static>;
 async fn main(request: Request, _: Context) -> Result<impl IntoResponse, Error> {
     let api = Api {
         db_client: Box::new(DynamoDbClient::new(Region::default()).with_retries(Policy::default())),
-        secure_send_dynamo_table: "SecuresendTransfersTest".to_string(),
+        transfers_table: "Transfers".to_string(),
     };
 
     match request.method() {
@@ -44,7 +44,7 @@ struct TransferDetails {
 
 struct Api {
     db_client: Box<dyn DynamoDb + Send + Sync>,
-    secure_send_dynamo_table: String,
+    transfers_table: String,
 }
 
 impl Api {
@@ -54,7 +54,7 @@ impl Api {
         details.id = Uuid::new_v4().to_hyphenated().to_string();
 
         let input = PutItemInput {
-            table_name: self.secure_send_dynamo_table.clone(),
+            table_name: self.transfers_table.clone(),
             item: details.clone().into(),
             ..PutItemInput::default()
         };
@@ -79,12 +79,14 @@ impl Api {
             .unwrap()
             .to_string();
 
-        let details_key = TransferDetailsKey { id: details_id.clone() };
+        let details_key = TransferDetailsKey {
+            id: details_id.clone(),
+        };
 
         let result = self
             .db_client
             .get_item(GetItemInput {
-                table_name: self.secure_send_dynamo_table.clone(),
+                table_name: self.transfers_table.clone(),
                 key: details_key.into(),
                 ..GetItemInput::default()
             })

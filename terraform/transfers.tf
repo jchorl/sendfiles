@@ -1,8 +1,8 @@
-resource "aws_dynamodb_table" "securesend_table" {
-  name           = "SecuresendTransfersTest"
+resource "aws_dynamodb_table" "transfers_table" {
+  name           = "Transfers"
   billing_mode   = "PROVISIONED"
-  read_capacity  = 2
-  write_capacity = 2
+  read_capacity  = 12
+  write_capacity = 12
   hash_key       = "id"
 
   attribute {
@@ -45,7 +45,7 @@ data "aws_iam_policy_document" "transfers" {
     ]
 
     resources = [
-      aws_dynamodb_table.securesend_table.arn
+      aws_dynamodb_table.transfers_table.arn
     ]
   }
 

@@ -1,6 +1,7 @@
-.aws_creds
+.env
 build
 backend/*/target
 output.json
 terraform/.terraform
+terraform/.terraform.lock.hcl
 terraform/terraform.tfstate*

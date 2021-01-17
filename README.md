@@ -40,8 +40,8 @@ docker run -it --rm \
     -v "$(pwd)/terraform":/work/terraform \
     -v "$(pwd)/build":/work/build \
     -w /work/terraform \
-    --env-file .aws_creds \
-    hashicorp/terraform:0.13.4 \
+    --env-file .env \
+    hashicorp/terraform:0.14.4 \
     apply
 ```
 
