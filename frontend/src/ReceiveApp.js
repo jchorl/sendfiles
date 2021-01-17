@@ -145,12 +145,6 @@ function ReceiveApp() {
                 Receive
               </button>
             </div>
-            <div>
-              <label>Progress</label>
-              <div className="form-description">
-                Hrm some progress here hehe
-              </div>
-            </div>
           </>
         ) : fetchTransferError ? (
           <div className="error-text">{fetchTransferError.message}</div>
