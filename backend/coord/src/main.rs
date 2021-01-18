@@ -126,7 +126,7 @@ impl Api {
         let offer = Offer {
             transfer_id: transfer_id,
             api_gateway_connection_id: api_gateway_connection_id,
-            valid_until: Utc::now() + Duration::minutes(15),
+            valid_until: Utc::now() + Duration::hours(1),
         };
 
         let input = PutItemInput {
