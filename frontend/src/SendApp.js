@@ -24,7 +24,9 @@ function SendApp() {
   const [passwordPlaceholder] = useState(
     Math.random() < 0.5 ? "hunter2" : "correct-horse-battery-staple"
   );
+  const [formErrors, setFormErrors] = useState();
 
+  // save files when selected
   const onFileSelected = (e) => {
     const file = e.target.files[0];
     if (!file) {
@@ -35,8 +37,34 @@ function SendApp() {
     setFileDetails(file);
   };
 
+  // form validation
+  const validateForm = () => {
+    let newErrors = {};
+
+    if (!fileDetails) {
+      newErrors.file_input = "At least one file must be selected";
+    }
+
+    if (!password) {
+      newErrors.password = "Password cannot be empty";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setFormErrors(newErrors);
+      return false;
+    }
+
+    setFormErrors();
+    return true;
+  };
+
+  // offer up the file!
   const initiateTransfer = async (e) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
 
     // deal with keys/encryption
     const key = await genKey();
@@ -157,7 +185,15 @@ function SendApp() {
             submit, a unique link will be generated allowing the receiver to
             download the file directly from your browser.
           </div>
-          <input id="file_input" type="file" onChange={onFileSelected} />
+          <input
+            id="file_input"
+            type="file"
+            className={formErrors && formErrors.file_input ? "error" : ""}
+            onChange={onFileSelected}
+          />
+          {formErrors && formErrors.file_input && (
+            <div className="form-error">{formErrors.file_input}</div>
+          )}
         </div>
         <div className="form-field">
           <label htmlFor="password">Choose a password</label>
@@ -168,10 +204,14 @@ function SendApp() {
           <input
             id="password"
             type="password"
+            className={formErrors && formErrors.password ? "error" : ""}
             placeholder={passwordPlaceholder}
             onChange={(e) => setPassword(e.target.value)}
             value={password}
           />
+          {formErrors && formErrors.password && (
+            <div className="form-error">{formErrors.password}</div>
+          )}
         </div>
         {!receiveLink ? (
           <div>

@@ -69,6 +69,10 @@ input {
   font-size: 16px;
 }
 
+input.error {
+  border: 2px solid red;
+}
+
 input:hover,
 input:focus {
   background-color: #ffffff;

@@ -3,7 +3,7 @@ import config from "./Config";
 import { decryptMessage, importKeyFromBase64 } from "./Crypto";
 import { NEW_ANSWER, NEW_OFFER, NEW_ICE_CANDIDATE } from "./Constants";
 import { Receiver } from "./FileTransfer";
-import { downloadFile } from "./Utils";
+import { downloadFile, humanFileSize } from "./Utils";
 import "./ReceiveApp.css";
 
 function ReceiveApp() {
@@ -13,6 +13,7 @@ function ReceiveApp() {
   );
   const [transferDetails, setTransferDetails] = useState();
   const [fetchTransferError, setFetchTransferError] = useState();
+  const [formErrors, setFormErrors] = useState();
 
   // turns /receive/aaa into aaa
   const currentURL = new URL(window.location.href);
@@ -51,15 +52,42 @@ function ReceiveApp() {
       });
   }, [transferId]);
 
+  // form validation
+  const validateForm = () => {
+    let newErrors = {};
+
+    if (!password) {
+      newErrors.password = "Password cannot be empty";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setFormErrors(newErrors);
+      return false;
+    }
+
+    setFormErrors();
+    return true;
+  };
+
   // code to receive the actual file via webrtc
   const initiateReceive = async (e) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
 
     // open websocket to coordinate webrtc connection and transfer the file
     const socketUrl = new URL(config.COORD_API);
     socketUrl.searchParams.set("role", "receiver");
     socketUrl.searchParams.set("transfer_id", transferDetails.id);
+
     const socket = new WebSocket(socketUrl);
+    socket.onerror = (e) => {
+      setFetchTransferError({
+        message: "The server could not be reached. Please try again.",
+      });
+    };
 
     const receiver = new Receiver(socket, transferDetails.contentLengthBytes);
     socket.onmessage = async function (event) {
@@ -102,8 +130,8 @@ function ReceiveApp() {
             <>
               <div>Filename: {transferDetails.fileName}</div>
               <div>
-                Encrypted content length: {transferDetails.contentLengthBytes}{" "}
-                bytes
+                Encrypted content length:{" "}
+                {humanFileSize(transferDetails.contentLengthBytes)}
               </div>
               <div>
                 Valid until: {transferDetails.validUntil.toLocaleString()}
@@ -113,7 +141,7 @@ function ReceiveApp() {
             <div>Loading...</div>
           ) : null}
         </div>
-        {transferDetails ? (
+        {transferDetails && (
           <>
             <div className="form-field">
               <label htmlFor="password">Enter password</label>
@@ -124,10 +152,14 @@ function ReceiveApp() {
               <input
                 id="password"
                 type="password"
+                className={formErrors && formErrors.password ? "error" : ""}
                 placeholder={passwordPlaceholder}
                 onChange={(e) => setPassword(e.target.value)}
                 value={password}
               />
+              {formErrors && formErrors.password && (
+                <div className="form-error">{formErrors.password}</div>
+              )}
             </div>
             <div className="form-field">
               <label htmlFor="submit">Receive</label>
@@ -146,9 +178,10 @@ function ReceiveApp() {
               </button>
             </div>
           </>
-        ) : fetchTransferError ? (
+        )}
+        {fetchTransferError && (
           <div className="error-text">{fetchTransferError.message}</div>
-        ) : null}
+        )}
       </form>
     </div>
   );

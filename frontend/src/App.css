@@ -27,6 +27,11 @@
   margin-bottom: 6px;
 }
 
+.form-error {
+  margin-top: 12px;
+  color: red;
+}
+
 .error-text {
   color: red;
 }
