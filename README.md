@@ -17,7 +17,7 @@ Coordination:
   - `Coord Lambda` - allows sender/receiver to communicate in order to set up [WebRTC](https://webrtc.org) connections
   - `Coord API Gateway` - Websocket gateway sitting in front of `Coord Lambda`, keeping websockets open
 
-![architecture diagram](https://sendfiles.dev/architecutre.png)
+![architecture diagram](https://sendfiles.dev/architecture.png)
 
 
 ## Project Structure
