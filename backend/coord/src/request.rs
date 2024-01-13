@@ -1,38 +1,6 @@
-use crate::errors::{BadRequestError, Error};
+use std::str::FromStr;
 
-use serde::Deserialize;
-use std::collections::HashMap;
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LambdaWebsocketRequest {
-    pub request_context: LambdaWebsocketRequestContext,
-    #[serde(default)]
-    pub query_string_parameters: HashMap<String, String>,
-    #[serde(default)]
-    body: String,
-    #[serde(default)]
-    is_base_64_encoded: bool,
-}
-
-impl LambdaWebsocketRequest {
-    pub fn get_body(&self) -> String {
-        if !self.is_base_64_encoded {
-            return self.body.clone();
-        }
-
-        String::from_utf8(base64::decode(self.body.clone()).unwrap()).unwrap()
-    }
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LambdaWebsocketRequestContext {
-    pub connection_id: String,
-    pub domain_name: String,
-    pub route_key: String,
-    pub stage: String,
-}
+use aws_lambda_events::apigw::ApiGatewayWebsocketProxyRequest;
 
 pub enum Role {
     Offerer,
@@ -40,30 +8,39 @@ pub enum Role {
     Receiver,
 }
 
+impl FromStr for Role {
+    type Err = ();
+
+    fn from_str(input: &str) -> Result<Role, Self::Err> {
+        match input.to_lowercase().as_ref() {
+            "offerer" => Ok(Role::Offerer),
+            "sender" => Ok(Role::Sender),
+            "receiver" => Ok(Role::Receiver),
+            _ => Err(()),
+        }
+    }
+}
+
 pub struct ConnectRequest {
     pub transfer_id: String,
     pub role: Role,
 }
 
-impl ConnectRequest {
-    pub fn parse_from(req: &LambdaWebsocketRequest) -> Result<Self, Error> {
-        let transfer_id = match req.query_string_parameters.get("transfer_id") {
-            Some(s) => s.clone(),
-            _ => return Err(Box::new(BadRequestError {})),
-        };
+impl TryFrom<&ApiGatewayWebsocketProxyRequest> for ConnectRequest {
+    type Error = ();
 
-        let role = match req.query_string_parameters.get("role").unwrap().as_str() {
-            "offerer" => Role::Offerer,
-            "sender" => Role::Sender,
-            "receiver" => Role::Receiver,
-            _ => return Err(Box::new(BadRequestError {})),
-        };
-
-        let req = ConnectRequest {
-            transfer_id: transfer_id,
-            role: role,
-        };
-
-        Ok(req)
+    fn try_from(request: &ApiGatewayWebsocketProxyRequest) -> Result<Self, Self::Error> {
+        Ok(ConnectRequest {
+            transfer_id: request
+                .query_string_parameters
+                .first("transfer_id")
+                .ok_or(())?
+                .to_owned(),
+            role: request
+                .query_string_parameters
+                .first("role")
+                .ok_or(())
+                .and_then(Role::from_str)?,
+        })
     }
 }
