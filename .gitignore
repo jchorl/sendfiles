@@ -1,6 +1,4 @@
 .env
-build
-backend/*/target
-output.json
+backend/target
 terraform/.terraform
 terraform/.terraform.lock.hcl

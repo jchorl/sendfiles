@@ -540,7 +540,7 @@ dependencies = [
 
 [[package]]
 name = "coord"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "aws-config",
  "aws-sdk-apigatewaymanagement",
@@ -1868,6 +1868,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "transfers"
+version = "0.2.0"
+dependencies = [
+ "aws-config",
+ "aws-sdk-dynamodb",
+ "base64",
+ "chrono",
+ "http 1.0.0",
+ "lambda_http",
+ "lambda_runtime",
+ "log",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
 name = "try-lock"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1928,6 +1947,9 @@ name = "uuid"
 version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5e395fcf16a7a3d8127ec99782007af141946b4795001f876d54fb0d55978560"
+dependencies = [
+ "getrandom",
+]
 
 [[package]]
 name = "version_check"
