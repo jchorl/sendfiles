@@ -2,6 +2,7 @@ mod transfer_details;
 
 use aws_config::BehaviorVersion;
 use aws_sdk_dynamodb::types::AttributeValue;
+use base64::{engine::general_purpose::URL_SAFE, Engine as _};
 use lambda_http::{http::Method, http::StatusCode, Request, RequestExt, Response};
 use lambda_http::{service_fn, Error};
 use log::error;
@@ -16,7 +17,7 @@ impl Api {
     async fn post_transfer_handler(&self, request: Request) -> Result<Response<String>, Error> {
         let body = request.into_body();
         let mut details: transfer_details::TransferDetails = serde_json::from_slice(body.as_ref())?;
-        details.id = Uuid::new_v4().as_hyphenated().to_string();
+        details.id = URL_SAFE.encode(Uuid::new_v4().as_bytes());
 
         let dynamodb_request = self
             .dynamodb_client
