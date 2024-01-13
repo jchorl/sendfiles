@@ -41,7 +41,7 @@ docker run -it --rm \
     -v "$(pwd)/build":/work/build \
     -w /work/terraform \
     --env-file .env \
-    hashicorp/terraform:0.14.4 \
+    hashicorp/terraform:1.6 \
     apply
 ```
 
@@ -60,21 +60,21 @@ Running a Rust Lambda function locally is brutally difficult, so test in prod.
 ### Running Frontend
 ```shell
 docker run -it --rm \
-    -v "$(pwd)/frontend":/securesend:ro \
-    -w /securesend \
-    --tmpfs /securesend/node_modules/webpack-dev-server/ssl \
+    -u "$(id -u):$(id -g)" \
+    -v "$(pwd)/frontend":/usr/src/app:ro \
+    -w /usr/src/app \
     -p 3000:3000 \
-    node:14.12 \
-    yarn start
+    node:21 \
+    npm run start
 ```
 
 ### Prettier
 ```shell
 docker run -it --rm \
-    -v "$(pwd)/frontend":/securesend \
-    -w /securesend \
-    -u 1000:1000 \
-    node:14.12 \
+    -u "$(id -u):$(id -g)" \
+    -v "$(pwd)/frontend":/usr/src/app \
+    -w /usr/src/app \
+    node:21 \
     npx prettier --write src
 ```
 

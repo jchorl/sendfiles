@@ -3,11 +3,11 @@
 set -euo pipefail
 
 docker run -it --rm \
-    -v "$(pwd)/frontend":/securesend:ro \
-    -v "$(pwd)/build/frontend":/securesend/build \
-    -w /securesend \
-    node:14.12 \
-    yarn build
+    -v "$(pwd)/frontend":/usr/src/app:ro \
+    -v "$(pwd)/build/frontend":/usr/src/app/build \
+    -w /usr/src/app \
+    node:21 \
+    npm run build
 
 docker run -it --rm \
     -v "$(pwd)/build/frontend":/contents \
