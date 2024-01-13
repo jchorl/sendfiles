@@ -1,6 +1,5 @@
 resource "aws_s3_bucket" "site" {
   bucket = "securesend-site"
-  acl    = "private"
 }
 
 resource "aws_s3_bucket_policy" "site" {
@@ -24,7 +23,7 @@ data "aws_iam_policy_document" "cloudfront_access" {
 # https://docs.aws.amazon.com/acm/latest/userguide/acm-services.html
 # "To use an ACM certificate with CloudFront, you must request or import the certificate in the US East (N. Virginia) region."
 resource "aws_acm_certificate" "root" {
-  provider          = aws.acm_provider
+  provider          = aws.us-east-1
   domain_name       = local.domain
   validation_method = "DNS"
 
@@ -51,7 +50,7 @@ resource "aws_route53_record" "root_validation" {
 }
 
 resource "aws_acm_certificate_validation" "root" {
-  provider                = aws.acm_provider # because cloudfront/acm require cert in east-1
+  provider                = aws.us-east-1 # because cloudfront/acm require cert in east-1
   certificate_arn         = aws_acm_certificate.root.arn
   validation_record_fqdns = [for record in aws_route53_record.root_validation : record.fqdn]
 }

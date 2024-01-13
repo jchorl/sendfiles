@@ -2,3 +2,4 @@
 backend/target
 terraform/.terraform
 terraform/.terraform.lock.hcl
+build

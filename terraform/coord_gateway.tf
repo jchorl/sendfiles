@@ -28,10 +28,10 @@ resource "aws_apigatewayv2_deployment" "coord_deployment" {
   depends_on = [aws_apigatewayv2_route.coord_route]
 
   triggers = {
-    redeployment = sha1(join(",", list(
+    redeployment = sha1(join(",", [
       jsonencode(aws_apigatewayv2_integration.coord_integration),
       jsonencode(aws_apigatewayv2_route.coord_route),
-    )))
+    ]))
   }
 
   lifecycle {

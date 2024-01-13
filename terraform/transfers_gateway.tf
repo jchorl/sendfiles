@@ -15,6 +15,7 @@ resource "aws_apigatewayv2_api" "transfers" {
   name                         = "transfers-http-api"
   protocol_type                = "HTTP"
   disable_execute_api_endpoint = true
+  fail_on_warnings             = true
 
   # TODO see if we can get rid of this
   cors_configuration {
@@ -32,10 +33,10 @@ resource "aws_apigatewayv2_deployment" "transfers_deployment" {
   ]
 
   triggers = {
-    redeployment = sha1(join(",", list(
+    redeployment = sha1(join(",", [
       jsonencode(aws_apigatewayv2_integration.transfers_integration),
       jsonencode(aws_apigatewayv2_route.transfers_route),
-    )))
+    ]))
   }
 
   lifecycle {

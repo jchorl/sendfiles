@@ -38,11 +38,28 @@ The Lambdas, API Gateways, DynamoDBs, IAM permissions and frontend S3 bucket/Clo
 ```shell
 docker run -it --rm \
     -v "$(pwd)/terraform":/work/terraform \
-    -v "$(pwd)/build":/work/build \
     -w /work/terraform \
-    --env-file .env \
-    hashicorp/terraform:1.6 \
-    apply
+    -v "$HOME/.aws:/root/.aws" \
+    -e AWS_PROFILE=sendfiles \
+    -e AWS_DEFAULT_REGION=us-west-2 \
+    --entrypoint sh \
+    hashicorp/terraform:1.6
+```
+
+### Backend
+
+```shell
+docker run -it --rm \
+    -e CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=/usr/bin/aarch64-linux-gnu-gcc \
+    -e RUSTFLAGS="-C target-feature=+crt-static" \
+    -v "$(pwd)/backend":/src \
+    -w /src \
+    rust:1.75 \
+    bash
+
+apt-get -qq update && apt-get -qq install -y gcc-aarch64-linux-gnu
+rustup target add aarch64-unknown-linux-gnu
+cargo build --target=aarch64-unknown-linux-gnu --release
 ```
 
 ### Frontend
