@@ -9,6 +9,7 @@ use aws_sdk_dynamodb::types::AttributeValue;
 use chrono::{Duration, Utc};
 use lambda_runtime::service_fn;
 use lambda_runtime::{Error, LambdaEvent};
+use log::error;
 use serde_json::json;
 
 struct Api {
@@ -156,7 +157,8 @@ impl Api {
             .table_name(self.offers_table.clone())
             .key("transfer_id", AttributeValue::S(transfer_id))
             .send()
-            .await?;
+            .await
+            .map_err(|e| format!("querying dynamo: {:?}", e))?;
         let hm = result.item.ok_or("no offer found")?;
         let offer: offer::Offer = (&hm)
             .try_into()
@@ -173,16 +175,28 @@ impl Api {
             .connection_id(offer.api_gateway_connection_id)
             .data(Blob::new(message_encoded))
             .send()
-            .await?;
+            .await
+            .map_err(|e| format!("post_to_connection: {:?}", e))?;
         Ok(())
     }
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
+    env_logger::init();
+
     let config = aws_config::load_defaults(BehaviorVersion::latest()).await;
     let dynamodb_client = aws_sdk_dynamodb::Client::new(&config);
-    let apigw_client = aws_sdk_apigatewaymanagement::Client::new(&config);
+
+    let apigw_endpoint_url = std::env::var("SENDFILES_API_GATEWAY_URL")
+        .map_err(|e| format!("getting api gateway url: {:?}", e))?;
+
+    let api_management_config = config
+        .clone()
+        .to_builder()
+        .endpoint_url(apigw_endpoint_url)
+        .build();
+    let apigw_client = aws_sdk_apigatewaymanagement::Client::new(&api_management_config);
 
     let api = Api {
         dynamodb_client,
@@ -192,7 +206,11 @@ async fn main() -> Result<(), Error> {
 
     lambda_runtime::run(service_fn(
         |request: LambdaEvent<ApiGatewayWebsocketProxyRequest>| async {
-            api.handler(request).await
+            let resp = api.handler(request).await;
+            if let Err(ref e) = resp {
+                error!("err={:?}", e);
+            }
+            resp
         },
     ))
     .await?;

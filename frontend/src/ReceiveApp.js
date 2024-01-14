@@ -17,7 +17,7 @@ function ReceiveApp() {
 
   // turns /receive/aaa into aaa
   const currentURL = new URL(window.location.href);
-  const transferId = currentURL.pathname.match(/receive\/([\w-]+)\/?/)[1];
+  const transferId = currentURL.pathname.match(/receive\/([\w\-_]+)\/?/)[1];
 
   // fetch transfer details
   useEffect(() => {

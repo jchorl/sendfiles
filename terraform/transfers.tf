@@ -72,6 +72,12 @@ resource "aws_lambda_function" "transfers_api" {
 
   filename = data.archive_file.dummy.output_path
 
+  environment {
+    variables = {
+      RUST_LOG = "warn"
+    }
+  }
+
   handler = "bootstrap"
   runtime = "provided.al2023"
   timeout = 1

@@ -62,6 +62,10 @@ rustup target add aarch64-unknown-linux-gnu
 cargo build --target=aarch64-unknown-linux-gnu --release
 ```
 
+```shell
+./scripts/deploy-backend.sh
+```
+
 ### Frontend
 
 Frontend assets are deployed to an S3 bucket fronted by CloudFront:

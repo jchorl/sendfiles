@@ -2,7 +2,7 @@ mod transfer_details;
 
 use aws_config::BehaviorVersion;
 use aws_sdk_dynamodb::types::AttributeValue;
-use base64::{engine::general_purpose::URL_SAFE, Engine as _};
+use base64::{engine, Engine as _};
 use lambda_http::{http::Method, http::StatusCode, Request, RequestExt, Response};
 use lambda_http::{service_fn, Error};
 use log::error;
@@ -15,42 +15,44 @@ struct Api {
 
 impl Api {
     async fn post_transfer_handler(&self, request: Request) -> Result<Response<String>, Error> {
-        let body = request.into_body();
-        let mut details: transfer_details::TransferDetails = serde_json::from_slice(body.as_ref())?;
-        details.id = URL_SAFE.encode(Uuid::new_v4().as_bytes());
+        let mut details: transfer_details::TransferDetails =
+            serde_json::from_slice(request.body())?;
+        let b64engine = engine::GeneralPurpose::new(
+            &base64::alphabet::URL_SAFE,
+            engine::GeneralPurposeConfig::new()
+                .with_decode_allow_trailing_bits(false)
+                .with_encode_padding(false)
+                .with_decode_padding_mode(engine::DecodePaddingMode::RequireNone),
+        );
+        details.id = b64engine.encode(Uuid::new_v4().as_bytes());
 
         let dynamodb_request = self
             .dynamodb_client
             .put_item()
             .table_name(self.transfers_table.to_owned())
-            .item("id", AttributeValue::S(details.id))
-            .item("file_name", AttributeValue::S(details.file_name))
+            .item("id", AttributeValue::S(details.id.clone()))
+            .item("file_name", AttributeValue::S(details.file_name.clone()))
             .item(
                 "content_length_bytes",
                 AttributeValue::N(details.content_length_bytes.to_string()),
             )
-            .item("private_key", AttributeValue::S(details.private_key))
+            .item(
+                "private_key",
+                AttributeValue::S(details.private_key.clone()),
+            )
             .item(
                 "valid_until",
                 AttributeValue::N(details.valid_until.timestamp().to_string()),
             );
 
-        let resp = match dynamodb_request.send().await {
-            Ok(result) => transfer_details::TransferDetails::try_from(
-                result
-                    .attributes()
-                    .ok_or("no attributes in dynamodb response")?,
-            )
-            .map_err(|e| format!("parsing transfer details from dynamodb: {:?}", e)),
-            Err(e) => {
-                error!("writing to db: {}", e);
-                return Ok(Response::builder()
-                    .status(StatusCode::INTERNAL_SERVER_ERROR)
-                    .body("error saving transfer".to_string())?);
-            }
+        if let Err(e) = dynamodb_request.send().await {
+            error!("writing to db: {}", e);
+            return Ok(Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body("error saving transfer".to_string())?);
         };
 
-        Ok(Response::new(serde_json::to_string(&resp)?))
+        Ok(Response::new(serde_json::to_string(&details)?))
     }
 
     async fn get_transfer_handler(&self, request: Request) -> Result<Response<String>, Error> {
@@ -75,7 +77,7 @@ impl Api {
         let details = match dynamodb_request.send().await {
             Ok(resp) => match resp.item() {
                 Some(hm) => transfer_details::TransferDetails::try_from(hm)
-                    .map_err(|e| format!("parsing transfer details from dynamodb: {:?}", e)),
+                    .map_err(|e| format!("parsing transfer details from dynamodb: {:?}", e))?,
                 None => {
                     return Ok(Response::builder()
                         .status(404)
@@ -94,7 +96,7 @@ impl Api {
         Ok(Response::new(resp))
     }
 
-    fn not_found(&self, _request: Request) -> Result<Response<String>, Error> {
+    fn not_found(&self, _request: &Request) -> Result<Response<String>, Error> {
         Ok(Response::builder()
             .status(404)
             .body("route not found".to_string())?)
@@ -103,6 +105,8 @@ impl Api {
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
+    env_logger::init();
+
     let config = aws_config::load_defaults(BehaviorVersion::latest()).await;
     let client = aws_sdk_dynamodb::Client::new(&config);
 
@@ -115,7 +119,7 @@ async fn main() -> Result<(), Error> {
         match *request.method() {
             Method::POST => api.post_transfer_handler(request).await,
             Method::GET => api.get_transfer_handler(request).await,
-            _ => api.not_found(request),
+            _ => api.not_found(&request),
         }
     }))
     .await?;

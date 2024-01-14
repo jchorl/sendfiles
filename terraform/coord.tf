@@ -80,6 +80,17 @@ resource "aws_lambda_function" "coord_api" {
 
   filename = data.archive_file.dummy.output_path
 
+  environment {
+    variables = {
+      RUST_LOG = "warn"
+
+      # this works because coord.sendfiles.dev is aliased to "domain/stage"
+      # ordinairily, you'd need
+      # domain_name/stage (stage = prod)
+      SENDFILES_API_GATEWAY_URL = "https://coord.${local.domain}"
+    }
+  }
+
   handler = "bootstrap"
   runtime = "provided.al2023"
   timeout = 1
