@@ -18,8 +18,6 @@ resource "aws_dynamodb_table" "offers_table" {
 
 data "aws_iam_policy_document" "coord_lambda" {
   statement {
-    sid = "1"
-
     actions = [
       "sts:AssumeRole",
     ]
@@ -58,21 +56,6 @@ data "aws_iam_policy_document" "coord" {
       "${aws_apigatewayv2_api.coord.execution_arn}/*/POST/@connections/{connectionId}"
     ]
   }
-
-  statement {
-    sid    = "Logging"
-    effect = "Allow"
-
-    resources = [
-      "arn:aws:logs:*:*:*"
-    ]
-
-    actions = [
-      "logs:CreateLogGroup",
-      "logs:CreateLogStream",
-      "logs:PutLogEvents"
-    ]
-  }
 }
 
 resource "aws_iam_policy" "coord" {
@@ -85,15 +68,32 @@ resource "aws_iam_role_policy_attachment" "coord" {
   policy_arn = aws_iam_policy.coord.arn
 }
 
+resource "aws_iam_role_policy_attachment" "coord_lambda" {
+  role       = aws_iam_role.coord.name
+  policy_arn = data.aws_iam_policy.AWSLambdaBasicExecutionRole.arn
+}
+
 resource "aws_lambda_function" "coord_api" {
-  filename      = "build/coord_lambda.zip"
   function_name = "coord_api"
   role          = aws_iam_role.coord.arn
-  handler       = "main"
+  architectures = ["arm64"]
 
-  source_code_hash = filebase64sha256("build/coord_lambda.zip")
+  filename = data.archive_file.dummy.output_path
 
-  runtime = "provided"
+  environment {
+    variables = {
+      RUST_LOG = "warn"
+
+      # this works because coord.sendfiles.dev is aliased to "domain/stage"
+      # ordinairily, you'd need
+      # domain_name/stage (stage = prod)
+      SENDFILES_API_GATEWAY_URL = "https://coord.${local.domain}"
+    }
+  }
+
+  handler = "bootstrap"
+  runtime = "provided.al2023"
+  timeout = 1
 }
 
 resource "aws_lambda_permission" "coord_apigw" {

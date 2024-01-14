@@ -48,21 +48,6 @@ data "aws_iam_policy_document" "transfers" {
       aws_dynamodb_table.transfers_table.arn
     ]
   }
-
-  statement {
-    sid    = "Logging"
-    effect = "Allow"
-
-    resources = [
-      "arn:aws:logs:*:*:*"
-    ]
-
-    actions = [
-      "logs:CreateLogGroup",
-      "logs:CreateLogStream",
-      "logs:PutLogEvents"
-    ]
-  }
 }
 
 resource "aws_iam_policy" "transfers" {
@@ -75,15 +60,27 @@ resource "aws_iam_role_policy_attachment" "transfers" {
   policy_arn = aws_iam_policy.transfers.arn
 }
 
+resource "aws_iam_role_policy_attachment" "transfers_lambda" {
+  role       = aws_iam_role.transfers.name
+  policy_arn = data.aws_iam_policy.AWSLambdaBasicExecutionRole.arn
+}
+
 resource "aws_lambda_function" "transfers_api" {
-  filename      = "build/transfers_lambda.zip"
   function_name = "transfers_api"
   role          = aws_iam_role.transfers.arn
-  handler       = "main"
+  architectures = ["arm64"]
 
-  source_code_hash = filebase64sha256("build/transfers_lambda.zip")
+  filename = data.archive_file.dummy.output_path
 
-  runtime = "provided"
+  environment {
+    variables = {
+      RUST_LOG = "warn"
+    }
+  }
+
+  handler = "bootstrap"
+  runtime = "provided.al2023"
+  timeout = 1
 }
 
 resource "aws_lambda_permission" "transfers_apigw" {
