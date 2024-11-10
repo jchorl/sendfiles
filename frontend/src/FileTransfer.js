@@ -89,15 +89,21 @@ export class Sender extends Client {
   sendData() {
     let offset = 0;
     const contentLen = this.contents.byteLength;
-    while (offset < contentLen) {
-      console.log(`send progress: ${offset}`);
-      const sliceContents = this.contents.slice(
-        offset,
-        offset + this.chunkSize
-      );
-      this.channel.send(sliceContents);
-      offset += sliceContents.byteLength;
-    }
+    const bufferUpTo = 65535;
+    const fillBuffer = () => {
+      while (offset < contentLen && this.channel.bufferedAmount < bufferUpTo) {
+        console.log(`send progress: ${offset}`);
+        const sliceContents = this.contents.slice(
+          offset,
+          offset + this.chunkSize
+        );
+        this.channel.send(sliceContents);
+        offset += sliceContents.byteLength;
+      }
+    };
+    this.channel.bufferedAmountLowThreshold = bufferUpTo / 2;
+    this.channel.onbufferedamountlow = fillBuffer;
+    fillBuffer();
   }
 }
 
