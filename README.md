@@ -54,7 +54,7 @@ docker run -it --rm \
     -e RUSTFLAGS="-C target-feature=+crt-static" \
     -v "$(pwd)/backend":/src \
     -w /src \
-    rust:1.75 \
+    rust:1.82 \
     bash
 
 apt-get -qq update && apt-get -qq install -y gcc-aarch64-linux-gnu
@@ -82,10 +82,10 @@ Running a Rust Lambda function locally is brutally difficult, so test in prod.
 ```shell
 docker run -it --rm \
     -u "$(id -u):$(id -g)" \
-    -v "$(pwd)/frontend":/usr/src/app:ro \
+    -v "$(pwd)/frontend":/usr/src/app \
     -w /usr/src/app \
     -p 3000:3000 \
-    node:21 \
+    node:23 \
     npm run start
 ```
 
@@ -95,8 +95,8 @@ docker run -it --rm \
     -u "$(id -u):$(id -g)" \
     -v "$(pwd)/frontend":/usr/src/app \
     -w /usr/src/app \
-    node:21 \
-    npx prettier --write src
+    node:23 \
+    npx prettier@3.4.1 --write src
 ```
 
 
