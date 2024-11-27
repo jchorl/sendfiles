@@ -43,7 +43,7 @@ class Client {
 }
 
 export class Sender extends Client {
-  chunkSize = 16384;
+  chunkSize = 16 * 1024;
 
   constructor(socket, contents) {
     super(socket);
@@ -55,13 +55,13 @@ export class Sender extends Client {
 
     // "useless" in-line lambdas because otherwise `this` gets overridden in the callback
     this.channel.addEventListener("open", () =>
-      this.onSendChannelStateChange()
+      this.onSendChannelStateChange(),
     );
     this.channel.addEventListener("close", () =>
-      this.onSendChannelStateChange()
+      this.onSendChannelStateChange(),
     );
     this.channel.addEventListener("error", (error) =>
-      console.error("Error in sendChannel:", error)
+      console.error("Error in sendChannel:", error),
     );
   }
 
@@ -89,13 +89,20 @@ export class Sender extends Client {
   sendData() {
     let offset = 0;
     const contentLen = this.contents.byteLength;
-    const bufferUpTo = 65535;
+
+    // https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Using_data_channels#understanding_message_size_limits
+    const bufferUpTo = 16 * 1024;
+    if (this.chunkSize > bufferUpTo) {
+      throw new Error(
+        `Chunk size ${this.chunkSize} cannot be greater than buffer size ${bufferUpTo}`,
+      );
+    }
+
     const fillBuffer = () => {
       while (offset < contentLen && this.channel.bufferedAmount < bufferUpTo) {
-        console.log(`send progress: ${offset}`);
         const sliceContents = this.contents.slice(
           offset,
-          offset + this.chunkSize
+          offset + this.chunkSize,
         );
         this.channel.send(sliceContents);
         offset += sliceContents.byteLength;
@@ -123,7 +130,7 @@ export class Receiver extends Client {
 
     this.fileSize = fileSize;
     this.connection.addEventListener("datachannel", (event) =>
-      this.receiveChannelCallback(event)
+      this.receiveChannelCallback(event),
     );
   }
 

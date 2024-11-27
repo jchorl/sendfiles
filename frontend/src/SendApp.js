@@ -22,7 +22,7 @@ function SendApp() {
   const [password, setPassword] = useState("");
   const [receiveLink, setReceiveLink] = useState();
   const [passwordPlaceholder] = useState(
-    Math.random() < 0.5 ? "hunter2" : "correct-horse-battery-staple"
+    Math.random() < 0.5 ? "hunter2" : "correct-horse-battery-staple",
   );
   const [formErrors, setFormErrors] = useState();
 
@@ -35,6 +35,7 @@ function SendApp() {
     }
 
     setFileDetails(file);
+    setFormErrors();
   };
 
   // form validation
@@ -43,6 +44,9 @@ function SendApp() {
 
     if (!fileDetails) {
       newErrors.file_input = "At least one file must be selected";
+    } else if (fileDetails.size > 100 * 1024 * 1024) {
+      // https://stackoverflow.com/a/32753261
+      newErrors.file_input = "File exceeds maximum allowed file size of 100mb";
     }
 
     if (!password) {
@@ -74,7 +78,7 @@ function SendApp() {
 
     // post metadata to metadata service
     const validUntil = new Date(
-      Date.now() + config.FILE_VALID_HOURS * 60 * 60 * 1000
+      Date.now() + config.FILE_VALID_HOURS * 60 * 60 * 1000,
     );
     const metadata = {
       fileName: fileDetails.name,
