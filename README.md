@@ -43,7 +43,7 @@ docker run -it --rm \
     -e AWS_PROFILE=sendfiles \
     -e AWS_DEFAULT_REGION=us-west-2 \
     --entrypoint sh \
-    hashicorp/terraform:1.6
+    hashicorp/terraform:1.9
 ```
 
 ### Backend
