@@ -7,7 +7,7 @@ export async function genKey() {
       length: 256,
     },
     true,
-    ["encrypt", "decrypt"]
+    ["encrypt", "decrypt"],
   );
 }
 
@@ -21,7 +21,7 @@ export async function encryptMessage(message, key, password) {
       iv: encodedPassword,
     },
     key,
-    message
+    message,
   );
 }
 
@@ -35,7 +35,7 @@ export async function decryptMessage(ciphertext, key, password) {
       iv: encodedPassword,
     },
     key,
-    ciphertext
+    ciphertext,
   );
 
   return decrypted;
@@ -58,7 +58,7 @@ export async function importKeyFromBase64(encoded) {
     decodedKey,
     algo,
     false,
-    ["decrypt"]
+    ["decrypt"],
   );
   return privateKey;
 }

@@ -12,6 +12,9 @@ fi
 
 set -x
 
+rm -rf build
+mkdir -p build
+
 ln -s ../backend/target/aarch64-unknown-linux-gnu/release/coord build/bootstrap
 zip -j -r build/deploy.zip build/bootstrap
 aws --profile sendfiles --no-cli-pager lambda update-function-code --function-name coord_api --zip-file fileb://build/deploy.zip --publish

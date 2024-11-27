@@ -18,7 +18,7 @@ function ClipboardButton(props) {
       () => {
         setCopyError(true);
         window.setTimeout(() => setCopyError(false), 2000);
-      }
+      },
     );
   };
 

@@ -9,7 +9,7 @@ import "./ReceiveApp.css";
 function ReceiveApp() {
   const [password, setPassword] = useState("");
   const [passwordPlaceholder] = useState(
-    Math.random() < 0.5 ? "hunter2" : "correct-horse-battery-staple"
+    Math.random() < 0.5 ? "hunter2" : "correct-horse-battery-staple",
   );
   const [transferDetails, setTransferDetails] = useState();
   const [fetchTransferError, setFetchTransferError] = useState();
@@ -34,7 +34,7 @@ function ReceiveApp() {
       .then((resp) => {
         if (resp.status === 404) {
           throw new Error(
-            "Transfer not found. This could be because the upload expired. Please ask the sender to try again."
+            "Transfer not found. This could be because the upload expired. Please ask the sender to try again.",
           );
         }
         return resp;
@@ -44,7 +44,7 @@ function ReceiveApp() {
         setTransferDetails({
           ...details,
           validUntil: new Date(details.validUntil),
-        })
+        }),
       )
       .catch((e) => {
         console.error("fetching transfer", e);
